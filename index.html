@@ -224,6 +224,7 @@ const RATIOS=[['arranque','envion','Arranque / Envión',78,84,'Arranque bajo res
  ['arranque','strasera','Arranque / Sent. trasera',60,68,'Fuerza de sobra para el arranque: el límite es técnico.','Falta fuerza de piernas: más sentadilla.'],
  ['sfrontal','strasera','Frontal / Trasera',83,90,'Frontal débil: posición del tronco y espalda alta.','Trasera relativamente débil.'],
  ['jerk','cargada','Jerk / Cargada',98,115,'El jerk está limitando tu envión.','La cargada está limitando tu envión.']];
+const RPE_TXT={6:'fácil, te quedaban 4 o más repeticiones.',7:'moderado, te quedaban unas 3 repeticiones.',8:'pesado, te quedaban 2 repeticiones.',9:'muy pesado, te quedaba solo 1 repetición.',10:'máximo, no podías hacer ni una más.'};
 const ATT={conservador:[88,93,98],normal:[91,96,100],agresivo:[93,98,102]};
 
 /* ===================== estado ===================== */
@@ -236,7 +237,7 @@ const role=()=>S.viewAs||(isCoach()?'coach':'athlete');
 const myA=()=>S.athletes[S.me.id];
 const planVisible=(p,u)=>p.assign==='all'||(Array.isArray(p.assign)&&p.assign.includes(u));
 const sortedPlans=()=>Object.entries(S.plans).sort((a,b)=>(b[1].week||'').localeCompare(a[1].week||'')||(b[1].createdAt||0)-(a[1].createdAt||0));
-const athleteList=()=>Object.entries(S.athletes).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));
+const athleteList=()=>Object.entries(S.athletes).filter(([i,a])=>!S.owner||a.coach===S.me.id).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||''));
 
 /* ===================== datos (Google Apps Script) ===================== */
 let LS={};let TOKEN=null;try{TOKEN=localStorage.getItem('barra-token')}catch(e){}
@@ -253,8 +254,9 @@ function localSync(){const col=re=>{const o={};for(const p in LS){const m=p.matc
  if(S.logsUid)S.logs=col(new RegExp('^athletes/'+S.logsUid.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'/logs/([^/]+)$'));
  Object.assign(S.loaded,{athletes:1,plans:1,slots:1,comps:1,bookings:1});softRender()}
 function errToast(e){toast((e&&e.message)||'No se pudo guardar. Revisa tu conexión e intenta de nuevo.')}
-async function put(path,data){const prev=LS[path];LS[path]=clone(data);localSync();try{await call('put',{path,data});return true}catch(e){if(prev===undefined)delete LS[path];else LS[path]=prev;localSync();errToast(e);return false}}
-async function putMany(items){const prev=items.map(it=>[it.path,LS[it.path]]);items.forEach(it=>LS[it.path]=clone(it.data));localSync();try{for(let i=0;i<items.length;i+=60)await call('putMany',{items:items.slice(i,i+60)});return true}catch(e){prev.forEach(([p,v])=>{if(v===undefined)delete LS[p];else LS[p]=v});localSync();errToast(e);refresh();return false}}
+function stamp(path,data){const p=path.split('/');if(p.length===2&&['athletes','plans','slots','comps','bookings'].includes(p[0])&&data&&!data.coach){const own=LS[path]&&LS[path].coach;data.coach=own||(S.owner?S.me.id:S.me.coach)||null}return data}
+async function put(path,data){stamp(path,data);const prev=LS[path];LS[path]=clone(data);localSync();try{await call('put',{path,data});return true}catch(e){if(prev===undefined)delete LS[path];else LS[path]=prev;localSync();errToast(e);return false}}
+async function putMany(items){items.forEach(it=>stamp(it.path,it.data));const prev=items.map(it=>[it.path,LS[it.path]]);items.forEach(it=>LS[it.path]=clone(it.data));localSync();try{for(let i=0;i<items.length;i+=60)await call('putMany',{items:items.slice(i,i+60)});return true}catch(e){prev.forEach(([p,v])=>{if(v===undefined)delete LS[p];else LS[p]=v});localSync();errToast(e);refresh();return false}}
 async function delMany(paths){const prev=paths.map(p=>[p,LS[p]]);paths.forEach(p=>delete LS[p]);localSync();try{await call('delMany',{paths});return true}catch(e){prev.forEach(([p,v])=>{if(v!==undefined)LS[p]=v});localSync();errToast(e);return false}}
 async function del(path){const prev=LS[path];delete LS[path];localSync();try{await call('del',{path});return true}catch(e){if(prev!==undefined)LS[path]=prev;localSync();errToast(e);return false}}
 async function shrinkImage(file){try{if(!/^image\/(jpeg|png|webp)/.test(file.type))return file;const bmp=await createImageBitmap(file);const sc=Math.min(1,1800/Math.max(bmp.width,bmp.height));if(sc===1&&file.size<1.2e6)return file;const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);const b=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));return b?new File([b],file.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}):file}catch(e){return file}}
@@ -264,10 +266,10 @@ async function loadLogs(u){try{const L=await call('getLogs',{uid:u});if(S.logsUi
 function watchLogs(u){if(!u||S.logsUid===u)return;S.logsUid=u;S.logs={};S.logsLoaded=false;loadLogs(u)}
 let busy=false;
 async function refresh(){if(busy||!TOKEN)return;busy=true;try{const all=await call('getAll');const keep={};for(const p in LS)if(p.includes('/logs/'))keep[p]=LS[p];LS={...all,...keep};S.slow=false;localSync();if(S.logsUid)loadLogs(S.logsUid)}catch(e){if(/Sesión inválida/.test(e.message||'')){busy=false;return A.logout()}S.slow=true;softRender()}finally{busy=false}}
-function setMe(me){S.me={id:me.id,name:me.name};S.owner=me.role==='coach';S.viewAs=null;S.view=null;S.tab=S.owner?'team':'home'}
+function setMe(me){S.me={id:me.id,name:me.name,coach:me.coach||null,coachName:me.coachName||null};S.owner=me.role==='coach';S.viewAs=null;S.view=null;S.tab=S.owner?'team':'home'}
 function startApp(){S.view=null;S.viewAs=null;S.tab=role()==='coach'?'team':'home';S.tools.src=role()==='coach'?'manual':'me';if(role()==='athlete')watchLogs(S.me.id);render();scrollTo(0,0);if(!S.poll)S.poll=setInterval(()=>{if(!document.hidden)refresh()},20000)}
 async function boot(){
- try{const st=await call('status');S.coachSet=st.coachSet}catch(e){S.bootErr=e.message;S.ready=true;render();return}
+ try{const st=await call('status');S.coachSet=st.coachSet;S.coaches=st.coaches||[]}catch(e){S.bootErr=e.message;S.ready=true;render();return}
  if(TOKEN){try{setMe(await call('me'))}catch(e){TOKEN=null;try{localStorage.removeItem('barra-token')}catch(_){}}}
  S.ready=true;if(S.me.id){render();await refresh();startApp()}else render()}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.me.id)refresh()});
@@ -283,6 +285,7 @@ function render(){
 function softRender(){if(!S.ready)return;const ae=document.activeElement;if(ae&&$('#app').contains(ae)&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)){if(!S._pend){S._pend=true;ae.addEventListener('blur',()=>{S._pend=false;setTimeout(render,0)},{once:true})}return}render()}
 function view(){let h='';
  if(!S.me.id)return vLogin();
+ if(!S.owner&&!S.me.coach)return vPickCoach();
  if(S.slow)h+=`<div class="banner">Todavía no se puede conectar con los datos del equipo. Revisa tu conexión.</div>`;
  const v=S.view;
  if(v){if(v.t==='plan')return h+vPlan(v.id);if(v.t==='planEdit')return h+vPlanEdit();if(v.t==='athlete')return h+vAthleteDetail(v.id)}
@@ -297,7 +300,7 @@ function vOnboard(){return`<div class="card" style="text-align:center;padding:28
 function nextBookings(u){const b=S.bookings[u];if(!b||!b.slots)return[];const t=ymd();return b.slots.map(id=>({id,...S.slots[id]})).filter(s=>s.date&&s.date>=t).sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time))}
 function nextComp(){const t=ymd();return Object.entries(S.comps).map(([id,c])=>({id,...c})).filter(c=>c.date>=t).sort((a,b)=>a.date.localeCompare(b.date))[0]}
 function vHome(){const a=myA();if(!a)return vOnboard();const t=ymd();const w=(a.wellness||[]).find(x=>x.d===t);const r=readiness(w);const ci=catInfo(a);const total=(a.rms?.arranque||0)+(a.rms?.envion||0);const sc=sinclair(total,a.bw,a.sex);
- let h=`<h1>${isBday(a)?'¡Feliz cumpleaños':'Hola'}, ${esc((a.name||'').split(' ')[0])}${isBday(a)?'! 🎂':''}</h1><div class="mut sm" style="margin-bottom:12px">${fmtD(t,{weekday:'long',day:'numeric',month:'long'})} · ${ci?'Cat. '+ci.label:'Sin categoría'} · ${ageGroup(a.by)}</div>`;
+ let h=`<h1>${isBday(a)?'¡Feliz cumpleaños':'Hola'}, ${esc((a.name||'').split(' ')[0])}${isBday(a)?'! 🎂':''}</h1><div class="mut sm" style="margin-bottom:12px">${fmtD(t,{weekday:'long',day:'numeric',month:'long'})} · ${ci?'Cat. '+ci.label:'Sin categoría'} · ${ageGroup(a.by)}${S.me.coachName?' · Profe '+esc(S.me.coachName):''}</div>`;
  h+=`<div class="card cc" style="--cc:#2ecc71"><div class="row sp"><div><div class="sec-t">Sensaciones de hoy</div>${w?`<div class="row"><span class="big" style="font-size:40px;color:var(--${r>=70?'ok':r>=50?'warn':'bad'})">${r??'—'}</span><div class="sm mut">disposición<br>sueño ${w.sueno}/5 · fatiga ${w.fatiga}/5 · dolor ${w.dolor||0}/10</div></div>`:'<div class="mut sm">Cuéntale al profe cómo llegas hoy (30 segundos).</div>'}</div><button class="btn ${w?'sec sm':''}" onclick="A.wellness()">${w?'Editar':'Registrar'}</button></div></div>`;
  h+=`<div class="grid3" style="margin-bottom:12px"><div class="stat lift" style="--lc:${EXC.arranque}"><div class="l">Arranque</div><div class="v">${fk(a.rms?.arranque)}</div></div><div class="stat lift" style="--lc:${EXC.envion}"><div class="l">Envión</div><div class="v">${fk(a.rms?.envion)}</div></div><div class="stat lift" style="--lc:#2ecc71"><div class="l">Total</div><div class="v">${total?fk(total):'—'}</div><div class="xs mut">${sc?'Sinclair '+fk(sc):''}</div></div></div>`;
  const nb=nextBookings(S.me.id);
@@ -322,13 +325,16 @@ function alertsFor(a){const out=[];const t=ymd();const ws=(a.wellness||[]).slice
  const c=nextComp();const ci=catInfo(a);if(c&&ci&&ci.limit&&a.bw>ci.limit&&daysUntil(c.date)<=21)out.push(['bad',`+${fk(a.bw-ci.limit)} kg sobre su categoría`]);
  return out}
 function weekCount(a){const m=mondayOf(ymd());return(a.lastLogs||[]).filter(l=>l.d>=m).length}
-function vTeam(){const list=athleteList();const t=ymd();
- let h=`<div class="row sp"><h1>Equipo</h1><button class="btn sm" onclick="A.addAthlete()">+ Atleta</button></div>`;
+function vTeam(){const list=athleteList();const t=ymd();const orphans=Object.entries(S.athletes).filter(([i,a])=>!a.coach);
+ let h=`<div class="row sp"><div><h1 style="margin:0">Mi equipo</h1><div class="sm mut">Profe ${esc(S.me.name)}</div></div><button class="btn sm" onclick="A.addAthlete()">+ Atleta</button></div>`;
  const al=list.map(([id,a])=>[id,a,alertsFor(a)]).filter(x=>x[2].length);
  if(al.length)h+=`<div class="card cc" style="--cc:#ff4d4f"><div class="sec-t">Alertas</div>${al.map(([id,a,x])=>`<div class="li click" onclick="A.open('athlete','${id}')"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1"><div class="b">${esc(a.name)}</div><div>${x.map(([c,m])=>`<span class="pill ${c}">${esc(m)}</span>`).join(' ')}</div></div></div>`).join('')}</div>`;
- h+=`<div class="card cc" style="--cc:#8b5cf6">${list.length?list.map(([id,a])=>{const w=(a.wellness||[]).find(x=>x.d===t);const r=readiness(w);const ci=catInfo(a);const tot=(a.rms?.arranque||0)+(a.rms?.envion||0);const coach=(S.config.coaches||[]).includes(id);
-  return`<div class="li click" onclick="A.open('athlete','${id}')"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1"><div class="b">${esc(a.name)}${isBday(a)?' 🎂':''} ${coach?'<span class="pill acc">profe</span>':''}${a.manual?'<span class="pill">sin cuenta</span>':''}</div><div class="sm mut">${ci?ci.label:'—'} · Total ${tot?fk(tot):'—'} · ${weekCount(a)} entrenos esta semana</div></div>${r!=null?`<span class="pill ${rdClass(r)}">${r}</span>`:'<span class="pill">sin check-in</span>'}</div>`}).join(''):`<div class="empty">Aún no hay atletas.<br><br>Comparte el link de la app: cada atleta se registra con su nombre y un PIN.<br>También puedes agregar atletas a mano con “+ Atleta”.</div>`}</div>`;
- h+=`<div class="card sm mut"><b style="color:var(--tx)">Cómo sumar atletas:</b> mándales el link de la app. Cada uno toca <b>Registrarme</b>, pone su nombre y un PIN, y crea su perfil. Otros profes entran con la contraseña de profe.</div>`;
+ h+=`<div class="card cc" style="--cc:#8b5cf6">${list.length?list.map(([id,a])=>{const w=(a.wellness||[]).find(x=>x.d===t);const r=readiness(w);const ci=catInfo(a);const tot=(a.rms?.arranque||0)+(a.rms?.envion||0);const coach=id[0]==='c';const vid=(a.lastLogs||[]).filter(l=>l.v&&daysUntil(l.d)>=-7).reduce((s,l)=>s+l.v,0);
+  return`<div class="li click" onclick="A.open('athlete','${id}')"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1"><div class="b">${esc(a.name)}${isBday(a)?' 🎂':''} ${coach?'<span class="pill acc">profe</span>':''}${a.manual?'<span class="pill">sin cuenta</span>':''}${vid?` <span class="pill blue">🎥 ${vid}</span>`:''}</div><div class="sm mut">${ci?ci.label:'—'} · Total ${tot?fk(tot):'—'} · ${weekCount(a)} entrenos esta semana</div></div>${r!=null?`<span class="pill ${rdClass(r)}">${r}</span>`:'<span class="pill">sin check-in</span>'}</div>`}).join(''):`<div class="empty">Aún no hay atletas.<br><br>Comparte el link de la app: cada atleta se registra con su nombre y un PIN.<br>También puedes agregar atletas a mano con “+ Atleta”.</div>`}</div>`;
+ if(orphans.length)h+=`<div class="card cc" style="--cc:#f59e0b"><div class="sec-t">Atletas sin profe asignado</div><div class="sm mut" style="margin-bottom:6px">Son de antes de separar los equipos. Agrégalos al tuyo si son tus alumnos.</div>${orphans.map(([id,a])=>`<div class="li"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1 b">${esc(a.name)}</div><button class="btn sm" onclick="A.claim('${id}')">Agregar a mi equipo</button></div>`).join('')}</div>`;
+ h+=`<div class="card sm mut"><b style="color:var(--tx)">Cómo sumar atletas:</b> agrégalos con “+ Atleta” y ponles un PIN, o mándales el link para que toquen <b>Registrarme</b> y te elijan como profe. Cada profe ve solo a sus atletas, sus planis y sus horarios.</div>`;
+ h+=`<div class="card cc" style="--cc:#06b6d4"><div class="sec-t">Profes</div>${(S.coaches||[]).map(c=>`<span class="chip">${esc(c.name)}${c.id===S.me.id?' (tú)':''}</span>`).join('')}
+  <div class="row wrap" style="margin-top:10px"><button class="btn sm sec" onclick="A.newCoach()">+ Crear profe</button><button class="btn sm ghost" onclick="A.myPass()">Cambiar mi contraseña</button></div></div>`;
  return h}
 
 /* ---------- detalle atleta (profe) ---------- */
@@ -524,11 +530,12 @@ function modalBody(){const m=S.modal,v=m.v;
  if(m.t==='log'){const a=myA();return`<h2>${esc(v.sName||'Registrar entrenamiento')}</h2><label>Fecha</label><input type="date" value="${esc(v.d)}" oninput="S.modal.v.d=this.value">
   ${v.rows.map((r,i)=>`<div class="card in" style="margin-top:10px"><div class="row"><input list="exlist" value="${esc(r.name)}" placeholder="Ejercicio" oninput="A.lr(${i},'name',this.value)"><button class="btn sm ghost" onclick="S.modal.v.rows.splice(${i},1);renderModal()">✕</button></div>
    <div class="grid2" style="grid-template-columns:repeat(4,1fr);margin-top:6px"><div><label style="margin-top:0">kg</label><input type="number" inputmode="decimal" value="${esc(r.kg??'')}" oninput="A.lr(${i},'kg',this.value)"></div><div><label style="margin-top:0">Reps</label><input type="number" inputmode="numeric" value="${esc(r.reps??'')}" oninput="A.lr(${i},'reps',this.value)"></div><div><label style="margin-top:0">Series</label><input type="number" inputmode="numeric" value="${esc(r.sets??'')}" oninput="A.lr(${i},'sets',this.value)"></div><div><label style="margin-top:0">Fallos</label><input type="number" inputmode="numeric" value="${esc(r.miss||'')}" oninput="A.lr(${i},'miss',this.value)"></div></div>
-   <label>RPE (esfuerzo)</label><div class="scale">${[6,7,8,9,10].map(n=>`<button class="${r.rpe===n?'on':''}" onclick="S.modal.v.rows[${i}].rpe=${n};renderModal()">${n}</button>`).join('')}</div>
+   <label>RPE · esfuerzo percibido</label><div class="scale">${[6,7,8,9,10].map(n=>`<button class="${r.rpe===n?'on':''}" onclick="S.modal.v.rows[${i}].rpe=${n};renderModal()">${n}</button>`).join('')}</div>
+   <div class="xs" style="margin-top:5px">${r.rpe?`<b>RPE ${r.rpe}:</b> ${RPE_TXT[r.rpe]}`:'<span class="mut">¿Qué tan pesado se sintió la serie más pesada? Elige según cuántas repeticiones más podrías haber hecho bien.</span>'}</div>
    <div id="pr${i}" class="sm" style="margin-top:6px">${prTxt(r,a)}</div></div>`).join('')}
   <button class="btn sec full" style="margin-top:10px" onclick="S.modal.v.rows.push({name:'',base:null,kg:null,reps:null,sets:1,rpe:null,miss:0});renderModal()">+ Ejercicio</button>
   <label>Comentario</label><textarea rows="2" placeholder="¿Cómo te sentiste?" oninput="S.modal.v.nota=this.value">${esc(v.nota)}</textarea>
-  <label>Video para el profe</label><span class="btn sec file">🎥 Subir video<input type="file" accept="video/*" onchange="A.vidIn(this)"></span>${S.uploading?' <span class="sm" style="color:var(--acc2)">Subiendo…</span>':''}
+  <label>Video para el profe</label><div class="xs mut" style="margin-bottom:6px">Tu profe lo ve en tu historial de entrenamientos y te puede dejar un comentario. Máx. 20 MB.</div><span class="btn sec file">🎥 Subir video<input type="file" accept="video/*" onchange="A.vidIn(this)"></span>${S.uploading?' <span class="sm" style="color:var(--acc2)">Subiendo…</span>':''}
   ${(v.videos||[]).map((x,i)=>`<div class="row sp sm" style="margin-top:6px"><span>🎥 ${esc(x.name||'video')}</span><button class="btn sm ghost" onclick="S.modal.v.videos.splice(${i},1);renderModal()">Quitar</button></div>`).join('')}
   <div class="row" style="margin-top:16px"><button class="btn f1" onclick="A.saveLog()">Guardar</button>${m.existing?`<button class="btn danger" onclick="A.delLog()">${S.confirm==='dl'?'¿Seguro?':'Borrar'}</button>`:''}<button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`}
  if(m.t==='goals'){const a=S.athletes[v.uid];return`<h2>Objetivos</h2><div class="sm mut">${esc(a?.name||'')}</div><label>Fecha objetivo</label><input type="date" value="${esc(v.date||'')}" oninput="S.modal.v.date=this.value"><div class="grid2">${['arranque','envion','sfrontal','strasera'].map(k=>`<div><label>${EXN[k]} (actual ${fk(a?.rms?.[k])})</label><input type="number" inputmode="decimal" value="${esc(v[k]??'')}" oninput="S.modal.v['${k}']=num(this.value)"></div>`).join('')}</div>
@@ -554,6 +561,8 @@ function modalBody(){const m=S.modal,v=m.v;
   <div class="row" style="margin-top:16px"><button class="btn f1" onclick="A.saveComp()">Crear</button><button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`;
  if(m.t==='pct'){const a=S.athletes[v.uid];const rm=a?.rms?.[v.ex];const st=a?.step||1;return`<h2>${EXN[v.ex]}</h2><div class="sm mut">${esc(a?.name||'')} · RM ${fk(rm)} kg</div>${rm?`<div class="tblwrap" style="margin-top:10px"><table class="x"><tr><th>%</th><th>kg</th><th>Discos por lado (barra ${a.sex==='F'?15:20} + seguros)</th></tr>${[50,55,60,65,70,75,80,85,90,95,100,105].map(p=>{const kg=rnd(rm*p/100,st);const r=plateCalc(kg,a.sex==='F'?15:20,true);return`<tr><td>${p}%</td><td class="kg">${fk(kg)}</td><td class="sm">${r?r.plates.map(x=>String(x[0]).replace('.',',')).join(' + ')||'—':'—'}</td></tr>`}).join('')}</table></div>`:'<div class="mut" style="margin-top:10px">Sin RM registrado.</div>'}<button class="btn sec full" style="margin-top:14px" onclick="A.closeModal()">Cerrar</button>`}
  if(m.t==='theme')return`<h2>Diseño</h2><div class="sm mut" style="margin-bottom:12px">Se guarda en este dispositivo.</div><div class="thm">${THEMES.map(([k,n,bg,c1,c2,c3])=>`<button class="${(S.theme||'dark')===k?'on':''}" onclick="A.setTheme('${k}')"><div class="pv" style="background:${bg}"><i style="background:linear-gradient(90deg,${c1},${c2});width:70%"></i><i style="background:${c3};width:90%;opacity:.5"></i><i style="background:${c3};width:55%;opacity:.5"></i></div><b>${n}</b></button>`).join('')}</div><button class="btn sec full" style="margin-top:14px" onclick="A.closeModal()">Listo</button>`;
+ if(m.t==='coach')return`<h2>Crear profe</h2><div class="sm mut">Tendrá su propio equipo, planis y horarios. Entra con su nombre y esta contraseña.</div><label>Nombre y apellido</label><input oninput="S.modal.v.name=this.value"><label>Contraseña (mín. 4)</label><input type="text" oninput="S.modal.v.pass=this.value"><div class="row" style="margin-top:16px"><button class="btn f1" onclick="A.saveCoach()">Crear</button><button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`;
+ if(m.t==='mypass')return`<h2>Cambiar mi contraseña</h2><label>Contraseña actual</label><input type="password" oninput="S.modal.v.old=this.value"><label>Nueva contraseña (mín. 4)</label><input type="password" oninput="S.modal.v.pass=this.value"><div class="row" style="margin-top:16px"><button class="btn f1" onclick="A.savePass()">Guardar</button><button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`;
  if(m.t==='img')return`<img src="${esc(v.src)}" style="width:100%;border-radius:10px"><button class="btn sec full" style="margin-top:10px" onclick="A.closeModal()">Cerrar</button>`;
  return''}
 function prTxt(r,a){if(!a||!r.base)return r.name?'<span class="mut xs">Sin % asociado</span>':'';const rm=a.rms?.[r.base];if(r.kg&&rm){if(r.kg>rm&&(r.miss||0)<(r.sets||1))return`<span class="pill ok">🎉 Nuevo RM de ${EXN[r.base]} (antes ${fk(rm)})</span>`;return`<span class="mut xs">${Math.round(r.kg/rm*100)}% de tu RM de ${EXN[r.base]}</span>`}return`<span class="mut xs">Base: ${EXN[r.base]}</span>`}
@@ -618,7 +627,7 @@ A.saveLog=async()=>{const v=clone(S.modal.v);v.rows=v.rows.filter(r=>r.name&&r.n
   if(r.base&&r.kg&&(!rm||r.kg>rm)&&(r.miss||0)<sets){a.rms=a.rms||{};a.rms[r.base]=r.kg;a.rmHist=a.rmHist||[];addHist(a.rmHist,{ex:r.base,kg:r.kg,d:v.d},'ex');prs.push(EXN[r.base])}});
  v.ts=v.ts||Date.now();
  if(!(await put('athletes/'+S.me.id+'/logs/'+v.id,v)))return;
- a.lastLogs=(a.lastLogs||[]).filter(l=>l.id!==v.id);a.lastLogs.push({id:v.id,d:v.d,planId:v.planId||null,s:v.s??null,nl,ton:Math.round(ton),int:iw?Math.round(ip/iw):null,rpe:rp.length?Math.round(rp.reduce((s,x)=>s+x,0)/rp.length*10)/10:null});
+ a.lastLogs=(a.lastLogs||[]).filter(l=>l.id!==v.id);a.lastLogs.push({id:v.id,d:v.d,planId:v.planId||null,s:v.s??null,nl,ton:Math.round(ton),int:iw?Math.round(ip/iw):null,rpe:rp.length?Math.round(rp.reduce((s,x)=>s+x,0)/rp.length*10)/10:null,v:(v.videos||[]).length});
  a.lastLogs=a.lastLogs.sort((x,y)=>x.d.localeCompare(y.d)).slice(-80);a.rmHist=(a.rmHist||[]).slice(-300);
  if(await put('athletes/'+S.me.id,a)){closeModal();toast(prs.length?'🎉 ¡Nuevo RM en '+prs.join(', ')+'!':'Entrenamiento guardado');render()}};
 A.delLog=()=>twoTap('dl',async()=>{const id=S.modal.v.id;if(await del('athletes/'+S.me.id+'/logs/'+id)){const a=clone(myA());a.lastLogs=(a.lastLogs||[]).filter(l=>l.id!==id);await put('athletes/'+S.me.id,a);closeModal();toast('Borrado')}});
@@ -687,10 +696,10 @@ A.book=async id=>{const me=S.me.id;const b=clone(S.bookings[me])||{slots:[]};con
 /* ===================== login ===================== */
 function vLogin(){const L=S.lg;if(S.bootErr)return`<div class="card"><h2>No se pudo conectar</h2><p class="mut">${esc(S.bootErr)}</p></div>`;
  let h=`<div class="card" style="text-align:center;padding:24px 18px"><div style="width:120px;margin:0 auto 6px">${LOGO}</div><div class="brand" style="font-size:42px">BAR<b>RA</b></div><div class="mut">Halterofilia · planificación y seguimiento</div></div><div class="card">`;
- if(!S.coachSet){h+=`<h2>Configuración inicial</h2><div class="sm mut">Crea la contraseña del profe. Con ella entran los profes; los atletas se registran con su nombre y un PIN.</div><label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Contraseña de profe (mín. 4)</label><input type="password" oninput="A.lg('pass',this.value)"><label>Repite la contraseña</label><input type="password" oninput="A.lg('pass2',this.value)"><button class="btn full" style="margin-top:14px" onclick="A.doLogin()">${S.lgBusy?'Creando…':'Crear y entrar'}</button>`}
+ if(!S.coachSet){h+=`<h2>Configuración inicial</h2><div class="sm mut">Crea tu cuenta de profe. Después puedes crear otros profes, y cada uno tendrá su propio equipo.</div><label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Contraseña de profe (mín. 4)</label><input type="password" oninput="A.lg('pass',this.value)"><label>Repite la contraseña</label><input type="password" oninput="A.lg('pass2',this.value)"><button class="btn full" style="margin-top:14px" onclick="A.doLogin()">${S.lgBusy?'Creando…':'Crear y entrar'}</button>`}
  else{h+=`<div class="seg"><button class="${L.role==='athlete'?'on':''}" onclick="S.lg.role='athlete';render()">Soy atleta</button><button class="${L.role==='coach'?'on':''}" onclick="S.lg.role='coach';render()">Soy profe</button></div>`;
-  if(L.role==='athlete')h+=`<div class="seg" style="margin-top:8px"><button class="${L.mode==='login'?'on':''}" onclick="S.lg.mode='login';render()">Entrar</button><button class="${L.mode==='reg'?'on':''}" onclick="S.lg.mode='reg';render()">Registrarme</button></div><label>Nombre y apellido</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>PIN (4 a 6 números)</label><input type="password" inputmode="numeric" value="${esc(L.pin||'')}" oninput="A.lg('pin',this.value)">`;
-  else h+=`<label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Contraseña de profe</label><input type="password" value="${esc(L.pass||'')}" oninput="A.lg('pass',this.value)">`;
+  if(L.role==='athlete')h+=`<div class="seg" style="margin-top:8px"><button class="${L.mode==='login'?'on':''}" onclick="S.lg.mode='login';render()">Entrar</button><button class="${L.mode==='reg'?'on':''}" onclick="S.lg.mode='reg';render()">Registrarme</button></div><label>Nombre y apellido</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>PIN (4 a 6 números)</label><input type="password" inputmode="numeric" value="${esc(L.pin||'')}" oninput="A.lg('pin',this.value)">${L.mode==='reg'?`<label>Tu profe</label><select onchange="A.lg('coach',this.value)"><option value="">Elige a tu profe</option>${(S.coaches||[]).map(c=>`<option value="${c.id}" ${L.coach===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>`:''}`;
+  else h+=`<label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Tu contraseña</label><input type="password" value="${esc(L.pass||'')}" oninput="A.lg('pass',this.value)">`;
   h+=`<button class="btn full" style="margin-top:14px" ${S.lgBusy?'disabled':''} onclick="A.doLogin()">${S.lgBusy?'Entrando…':L.role==='athlete'&&L.mode==='reg'?'Crear cuenta':'Entrar'}</button>`}
  return h+'</div>'}
 A.lg=(k,v)=>{S.lg[k]=v};
@@ -700,12 +709,20 @@ A.doLogin=async()=>{const L=S.lg;if(S.lgBusy)return;
  S.lgBusy=true;render();
  try{let r;if(!S.coachSet){r=await call('setupCoach',{name:L.name,pass:L.pass});S.coachSet=true}
   else if(L.role==='coach')r=await call('login',{role:'coach',name:L.name,pass:L.pass});
-  else if(L.mode==='reg'){if(!/^\d{4,6}$/.test(L.pin||'')){S.lgBusy=false;render();return toast('El PIN debe tener 4 a 6 números')}r=await call('register',{name:L.name,pin:L.pin})}
+  else if(L.mode==='reg'){if(!/^\d{4,6}$/.test(L.pin||'')){S.lgBusy=false;render();return toast('El PIN debe tener 4 a 6 números')}if(!L.coach){S.lgBusy=false;render();return toast('Elige a tu profe')}r=await call('register',{name:L.name,pin:L.pin,coach:L.coach})}
   else r=await call('login',{role:'athlete',name:L.name,pin:L.pin});
   TOKEN=r.token;try{localStorage.setItem('barra-token',TOKEN)}catch(e){}setMe(r.me);S.lg={role:'athlete',mode:'login'};S.lgBusy=false;render();await refresh();startApp()}
  catch(e){S.lgBusy=false;render();toast(e.message||'Error')}};
 A.logout=()=>{TOKEN=null;try{localStorage.removeItem('barra-token')}catch(e){}clearInterval(S.poll);S.poll=null;LS={};S.me={id:null,name:''};S.owner=false;S.viewAs=null;S.view=null;S.logsUid=null;S.modal=null;renderModal();localSync();render()};
 A.resetPin=async u=>{const el=$('#newpin');const pin=el&&el.value.trim();if(!/^\d{4,6}$/.test(pin||''))return toast('El PIN debe tener 4 a 6 números');try{await call('resetPin',{uid:u,pin});el.value='';toast('PIN cambiado')}catch(e){errToast(e)}};
+
+function vPickCoach(){return`<div class="card cc" style="--cc:#8b5cf6"><h2>¿Quién es tu profe?</h2><div class="sm mut">Elige a tu profe para ver su planificación y sus horarios.</div><label>Profe</label><select onchange="S.pick=this.value"><option value="">Elige…</option>${(S.coaches||[]).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><button class="btn full" style="margin-top:14px" onclick="A.pickCoach()">Continuar</button></div>`}
+A.pickCoach=async()=>{if(!S.pick)return toast('Elige a tu profe');try{const me=await call('setMyCoach',{coach:S.pick});S.me.coach=me.coach;S.me.coachName=me.coachName;await refresh();render()}catch(e){errToast(e)}};
+A.claim=async id=>{const a=clone(S.athletes[id]);if(!a)return;a.coach=S.me.id;if(await put('athletes/'+id,a))toast(a.name+' ahora está en tu equipo')};
+A.newCoach=()=>openModal({t:'coach',v:{name:'',pass:''}});
+A.myPass=()=>openModal({t:'mypass',v:{old:'',pass:''}});
+A.saveCoach=async()=>{const v=S.modal.v;try{await call('createCoach',{name:v.name,pass:v.pass});const st=await call('status');S.coaches=st.coaches;closeModal();render();toast('Profe creado. Entra con «'+v.name.trim()+'» y su contraseña')}catch(e){errToast(e)}};
+A.savePass=async()=>{const v=S.modal.v;try{await call('changePass',{old:v.old,pass:v.pass});closeModal();toast('Contraseña cambiada')}catch(e){errToast(e)}};
 
 boot();
 </script>
