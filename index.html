@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0f1115">
 <title>BARRA · Halterofilia</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230f1115%22/%3E%3Cg%20transform%3D%22translate%280%2016%29%22%3E%3Crect%20x%3D%221%22%20y%3D%2214.5%22%20width%3D%2262%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%23c0c6d0%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2213%22%20width%3D%2222%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22%239aa3b2%22/%3E%3Crect%20x%3D%2211%22%20y%3D%223%22%20width%3D%226%22%20height%3D%2226%22%20rx%3D%221.5%22%20fill%3D%22%23ff2d55%22/%3E%3Crect%20x%3D%225.5%22%20y%3D%225%22%20width%3D%225%22%20height%3D%2222%22%20rx%3D%221.5%22%20fill%3D%22%233b82f6%22/%3E%3Crect%20x%3D%2247%22%20y%3D%223%22%20width%3D%226%22%20height%3D%2226%22%20rx%3D%221.5%22%20fill%3D%22%23ff2d55%22/%3E%3Crect%20x%3D%2253.5%22%20y%3D%225%22%20width%3D%225%22%20height%3D%2222%22%20rx%3D%221.5%22%20fill%3D%22%233b82f6%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%230f1115%22/%3E%3Cg%20transform%3D%22translate%280%2016%29%22%3E%3Crect%20x%3D%221%22%20y%3D%2214.5%22%20width%3D%2262%22%20height%3D%223%22%20rx%3D%221.5%22%20fill%3D%22%23c0c6d0%22/%3E%3Crect%20x%3D%2221%22%20y%3D%2213%22%20width%3D%2222%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22%239aa3b2%22/%3E%3Crect%20x%3D%2211%22%20y%3D%223%22%20width%3D%226%22%20height%3D%2226%22%20rx%3D%221.5%22%20fill%3D%22%23ff2d55%22/%3E%3Crect%20x%3D%225.5%22%20y%3D%225%22%20width%3D%225%22%20height%3D%2222%22%20rx%3D%221.5%22%20fill%3D%22%233b82f6%22/%3E%3Crect%20x%3D%2247%22%20y%3D%223%22%20width%3D%226%22%20height%3D%2226%22%20rx%3D%221.5%22%20fill%3D%22%23ff2d55%22/%3E%3Crect%20x%3D%2253.5%22%20y%3D%225%22%20width%3D%225%22%20height%3D%2222%22%20rx%3D%221.5%22%20fill%3D%22%233b82f6%22/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+svg{display:block}
+.brand svg,div>svg[viewBox='0 0 64 32']{width:100%;height:auto}
 :root{--bg:#0f1115;--card:#181b22;--card2:#21252e;--line:#2b303b;--tx:#eef1f6;--mut:#9aa3b2;--acc:#ff5a1f;--acc2:#ffb020;--ok:#2ecc71;--warn:#f5b301;--bad:#ff4d4f;--blue:#3b82f6}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--tx);font-family:Barlow,system-ui,sans-serif;font-size:15px;-webkit-tap-highlight-color:transparent}
@@ -122,6 +126,7 @@ nav.bottom button.on svg{filter:drop-shadow(0 0 6px var(--tc))}
 <div id="modal"></div>
 <datalist id="exlist"><option value="Arranque"><option value="Arranque colgado"><option value="Arranque de potencia"><option value="Sentadilla de arranque"><option value="Envión"><option value="Cargada"><option value="Cargada colgada"><option value="Cargada de potencia"><option value="Jerk"><option value="Jerk tras nuca"><option value="Push press"><option value="Sentadilla frontal"><option value="Sentadilla trasera"><option value="Tirón de arranque"><option value="Tirón de envión"></datalist>
 <script>
+const LOGO=`<svg viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="14.5" width="62" height="3" rx="1.5" fill="#c0c6d0"/><rect x="21" y="13" width="22" height="6" rx="1" fill="#9aa3b2"/><rect x="18" y="11" width="3" height="10" rx="1" fill="#e8e8e8"/><rect x="43" y="11" width="3" height="10" rx="1" fill="#e8e8e8"/><rect x="11" y="3" width="6" height="26" rx="1.5" fill="#d7263d"/><rect x="5.5" y="5" width="5" height="22" rx="1.5" fill="#1f6feb"/><rect x="47" y="3" width="6" height="26" rx="1.5" fill="#d7263d"/><rect x="53.5" y="5" width="5" height="22" rx="1.5" fill="#1f6feb"/></svg>`;
 /* ===================== utilidades ===================== */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -237,7 +242,7 @@ const IC={home:'<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1
 const svg=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 function tabsFor(){return role()==='coach'?[['team','Equipo'],['plans','Planis'],['cal','Agenda'],['tools','Herram.']]:[['home','Hoy'],['plans','Plani'],['cal','Agenda'],['profile','Perfil'],['tools','Herram.']]}
 function render(){
- $('#hdr').innerHTML=`<div class="brand">BAR<b>RA</b></div><div class="f1">${S.me.id?`<span class="pill ${role()==='coach'?'acc':'blue'}">${role()==='coach'?'Profe':'Atleta'}</span>`:''}</div>${S.ready&&S.me.id&&isCoach()?`<button class="btn sm sec" onclick="A.toggleRole()">${role()==='coach'?'Ver como atleta':'Volver a profe'}</button>`:''}${S.me.id?`<button class="btn sm ghost" onclick="A.logout()">Salir</button>`:''}`;
+ $('#hdr').innerHTML=`<div class="brand row" style="gap:7px"><span style="width:38px;display:flex">${LOGO}</span><span>BAR<b>RA</b></span></div><div class="f1">${S.me.id?`<span class="pill ${role()==='coach'?'acc':'blue'}">${role()==='coach'?'Profe':'Atleta'}</span>`:''}</div>${S.ready&&S.me.id&&isCoach()?`<button class="btn sm sec" onclick="A.toggleRole()">${role()==='coach'?'Ver como atleta':'Volver a profe'}</button>`:''}${S.me.id?`<button class="btn sm ghost" onclick="A.logout()">Salir</button>`:''}`;
  $('#nav').innerHTML=S.ready&&S.me.id?tabsFor().map(([k,l])=>`<button style="--tc:${({home:'#ff5a1f',team:'#ff5a1f',plans:'#8b5cf6',cal:'#3b82f6',profile:'#2ecc71',tools:'#f59e0b'})[k]}" class="${S.tab===k&&!S.view?'on':''}" onclick="A.tab('${k}')">${svg(k==='home'?'home':k)}${l}</button>`).join(''):'';
  $('#app').innerHTML=S.ready?view():'<div class="loading">Cargando…</div>'}
 function softRender(){if(!S.ready)return;const ae=document.activeElement;if(ae&&$('#app').contains(ae)&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)){if(!S._pend){S._pend=true;ae.addEventListener('blur',()=>{S._pend=false;setTimeout(render,0)},{once:true})}return}render()}
@@ -251,7 +256,7 @@ function view(){let h='';
  return h}
 
 /* ---------- onboarding ---------- */
-function vOnboard(){return`<div class="card" style="text-align:center;padding:28px 18px"><div class="brand" style="font-size:40px">BAR<b>RA</b></div><h2 style="margin-top:10px">Bienvenido/a al equipo</h2><p class="mut">Crea tu perfil con tu peso y tus RM. Con eso la app calcula automáticamente los kilos de cada porcentaje de la plani.</p><button class="btn" onclick="A.editProfile('${S.me.id}')">Crear mi perfil</button></div>`}
+function vOnboard(){return`<div class="card" style="text-align:center;padding:28px 18px"><div style="width:120px;margin:0 auto 6px">${LOGO}</div><div class="brand" style="font-size:40px">BAR<b>RA</b></div><h2 style="margin-top:10px">Bienvenido/a al equipo</h2><p class="mut">Crea tu perfil con tu peso y tus RM. Con eso la app calcula automáticamente los kilos de cada porcentaje de la plani.</p><button class="btn" onclick="A.editProfile('${S.me.id}')">Crear mi perfil</button></div>`}
 
 /* ---------- inicio atleta ---------- */
 function nextBookings(u){const b=S.bookings[u];if(!b||!b.slots)return[];const t=ymd();return b.slots.map(id=>({id,...S.slots[id]})).filter(s=>s.date&&s.date>=t).sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time))}
@@ -615,7 +620,7 @@ A.book=async id=>{const me=S.me.id;const b=clone(S.bookings[me])||{slots:[]};con
 
 /* ===================== login ===================== */
 function vLogin(){const L=S.lg;if(S.bootErr)return`<div class="card"><h2>No se pudo conectar</h2><p class="mut">${esc(S.bootErr)}</p></div>`;
- let h=`<div class="card" style="text-align:center;padding:24px 18px"><div class="brand" style="font-size:42px">BAR<b>RA</b></div><div class="mut">Halterofilia · planificación y seguimiento</div></div><div class="card">`;
+ let h=`<div class="card" style="text-align:center;padding:24px 18px"><div style="width:120px;margin:0 auto 6px">${LOGO}</div><div class="brand" style="font-size:42px">BAR<b>RA</b></div><div class="mut">Halterofilia · planificación y seguimiento</div></div><div class="card">`;
  if(!S.coachSet){h+=`<h2>Configuración inicial</h2><div class="sm mut">Crea la contraseña del profe. Con ella entran los profes; los atletas se registran con su nombre y un PIN.</div><label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Contraseña de profe (mín. 6)</label><input type="password" oninput="A.lg('pass',this.value)"><label>Repite la contraseña</label><input type="password" oninput="A.lg('pass2',this.value)"><button class="btn full" style="margin-top:14px" onclick="A.doLogin()">${S.lgBusy?'Creando…':'Crear y entrar'}</button>`}
  else{h+=`<div class="seg"><button class="${L.role==='athlete'?'on':''}" onclick="S.lg.role='athlete';render()">Soy atleta</button><button class="${L.role==='coach'?'on':''}" onclick="S.lg.role='coach';render()">Soy profe</button></div>`;
   if(L.role==='athlete')h+=`<div class="seg" style="margin-top:8px"><button class="${L.mode==='login'?'on':''}" onclick="S.lg.mode='login';render()">Entrar</button><button class="${L.mode==='reg'?'on':''}" onclick="S.lg.mode='reg';render()">Registrarme</button></div><label>Nombre y apellido</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>PIN (4 a 6 números)</label><input type="password" inputmode="numeric" value="${esc(L.pin||'')}" oninput="A.lg('pin',this.value)">`;
