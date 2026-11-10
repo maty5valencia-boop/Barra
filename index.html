@@ -338,7 +338,7 @@ function vAthleteDetail(id){const a=S.athletes[id];if(!a)return`<button class="b
  if(al.length)h+=`<div class="card">${al.map(([c,m])=>`<span class="pill ${c}">${esc(m)}</span>`).join(' ')}</div>`;
  h+=vProfile(id,true);
  if(!a.manual&&id!==S.me.id&&id[0]==='a')h+=`<div class="card cc" style="--cc:#f59e0b"><div class="sec-t">¿Olvidó su PIN?</div><div class="row"><input id="newpin" type="password" inputmode="numeric" placeholder="Nuevo PIN (4 a 6 números)"><button class="btn sm sec" onclick="A.resetPin('${id}')">Cambiar</button></div></div>`;
- if(a.manual)h+=`<div class="card row sp"><div class="sm mut">Atleta sin cuenta, administrado por el profe.</div><button class="btn sm danger" onclick="A.delAthlete('${id}')">${S.confirm==='da'+id?'¿Seguro? Toca otra vez':'Eliminar'}</button></div>`;
+ h+=`<div class="card row sp"><div class="sm mut">${a.manual?'Atleta sin cuenta, administrado por el profe.':id===S.me.id?'Este es tu propio perfil de atleta. Al eliminarlo se borran tu perfil y tus registros, pero sigues entrando como profe.':'Eliminar al atleta borra su perfil, sus entrenamientos, sus reservas y su cuenta (nombre y PIN).'}</div><button class="btn sm danger" onclick="A.delAthlete('${id}')">${S.confirm==='da'+id?'¿Seguro? Toca otra vez':'Eliminar atleta'}</button></div>`;
  return h}
 
 /* ---------- perfil ---------- */
@@ -587,7 +587,7 @@ A.saveProfile=async()=>{const m=S.modal,v=m.v;if(!v.name||!v.name.trim())return 
  a.rmHist=a.rmHist.slice(-300);a.bwHist=a.bwHist.slice(-200);a.updatedAt=Date.now();
  if(await put('athletes/'+v.uid,a)){closeModal();toast('Perfil guardado')}};
 A.toggleCoach=async u=>{const c=clone(S.config)||{};c.coaches=c.coaches||[];c.coaches=c.coaches.includes(u)?c.coaches.filter(x=>x!==u):[...c.coaches,u];if(await put('config/main',c))toast('Permisos actualizados')};
-A.delAthlete=u=>twoTap('da'+u,async()=>{if(await del('athletes/'+u)){A.back();toast('Atleta eliminado')}});
+A.delAthlete=u=>twoTap('da'+u,async()=>{try{await call('deleteAthlete',{uid:u});for(const p of Object.keys(LS))if(p==='athletes/'+u||p.startsWith('athletes/'+u+'/')||p==='bookings/'+u)delete LS[p];A.back();localSync();toast('Atleta eliminado');refresh()}catch(e){errToast(e)}});
 A.pctTable=(u,ex)=>openModal({t:'pct',v:{uid:u,ex}});
 A.goals=u=>{const a=S.athletes[u];openModal({t:'goals',v:{uid:u,...(a?.goals||{})}})};
 A.saveGoals=async()=>{const v=S.modal.v;const a=clone(S.athletes[v.uid]);if(!a)return;const g={date:v.date||null};['arranque','envion','sfrontal','strasera'].forEach(k=>{if(v[k])g[k]=v[k]});a.goals=g;if(await put('athletes/'+v.uid,a)){closeModal();toast('Objetivos guardados')}};
