@@ -93,10 +93,10 @@ video{width:100%;border-radius:10px;background:#000;margin-top:6px}
 .loading{display:grid;place-items:center;min-height:60vh;color:var(--mut)}
 
 body{background:radial-gradient(900px 500px at 100% -10%,rgba(139,92,246,.18),transparent 60%),radial-gradient(800px 500px at -10% 10%,rgba(255,90,31,.14),transparent 60%),radial-gradient(900px 600px at 50% 110%,rgba(6,182,212,.12),transparent 60%),var(--bg);background-attachment:fixed;min-height:100vh}
-.brand b{background:linear-gradient(90deg,#ff5a1f,#ff2d75,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand b{background:linear-gradient(90deg,var(--g1),var(--g2),#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent}
 header.top{border-bottom:0;box-shadow:0 1px 0 rgba(255,255,255,.06)}
-header.top::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,#ff5a1f,#ff2d75,#8b5cf6,#3b82f6,#06b6d4,#2ecc71)}
-.btn{background:linear-gradient(135deg,#ff5a1f,#ff2d75);box-shadow:0 4px 14px rgba(255,61,90,.25)}
+header.top::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:2px;background:linear-gradient(90deg,var(--g1),var(--g2),#8b5cf6,#3b82f6,#06b6d4,#2ecc71)}
+.btn{background:linear-gradient(135deg,var(--g1),var(--g2));box-shadow:0 4px 14px rgba(255,61,90,.25)}
 .btn.sec,.btn.ghost,.btn.danger{box-shadow:none}
 .btn.sec{background:var(--card2)}
 .card.cc{border-top:3px solid var(--cc);background:linear-gradient(180deg,color-mix(in srgb,var(--cc) 13%,var(--card)) 0,var(--card) 120px)}
@@ -106,17 +106,47 @@ header.top::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height
 .stat.lift .l{color:color-mix(in srgb,var(--lc) 70%,#fff)}
 nav.bottom button.on{color:var(--tc)}
 nav.bottom button.on svg{filter:drop-shadow(0 0 6px var(--tc))}
-.seg button.on,.tabs button.on,.scale button.on{background:linear-gradient(135deg,#ff5a1f,#ff2d75);border-color:transparent}
+.seg button.on,.tabs button.on,.scale button.on{background:linear-gradient(135deg,var(--g1),var(--g2));border-color:transparent}
 .chip{border:1px solid rgba(255,255,255,.06)}
-.cal .d.s{background:linear-gradient(135deg,#ff5a1f,#ff2d75)}
+.cal .d.s{background:linear-gradient(135deg,var(--g1),var(--g2))}
 .cal .d.has{background:linear-gradient(180deg,rgba(59,130,246,.22),var(--card2))}
 .cal .d.bk{background:linear-gradient(180deg,rgba(46,204,113,.28),var(--card2))}
 .cal .d.cp{background:linear-gradient(180deg,rgba(255,90,31,.3),var(--card2))}
-.prog>i{background:linear-gradient(90deg,#ff5a1f,#ff2d75,#8b5cf6)}
+.prog>i{background:linear-gradient(90deg,var(--g1),var(--g2),#8b5cf6)}
 .daypick{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .daypick button{padding:10px 0;border-radius:9px;border:1px solid var(--line);background:var(--card2);color:var(--mut);font:800 14px Barlow;cursor:pointer}
 .daypick button.on{background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border-color:transparent}
 .slot{border-left:4px solid var(--sc,#3b82f6);padding-left:10px;border-radius:4px}
+
+:root{--g1:#ff5a1f;--g2:#ff2d75;--hdr:rgba(15,17,21,.94);--navbg:#12151b;--mix:#fff}
+.card.cc h2,.card.cc h3,.card.cc .sec-t{color:color-mix(in srgb,var(--cc) 75%,var(--mix))}
+.stat.lift .v{color:color-mix(in srgb,var(--lc) 55%,var(--mix))}.stat.lift .l{color:color-mix(in srgb,var(--lc) 70%,var(--mix))}
+header.top{background:var(--hdr)}nav.bottom{background:var(--navbg)}
+.btn{box-shadow:0 4px 14px color-mix(in srgb,var(--g2) 30%,transparent)}
+.thm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.thm button{border:2px solid var(--line);border-radius:14px;padding:0;overflow:hidden;cursor:pointer;background:none;text-align:left}
+.thm button.on{border-color:var(--g2)}
+.thm .pv{height:74px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.thm .pv i{display:block;height:10px;border-radius:5px}
+.thm b{display:block;padding:8px 10px;font:700 14px Barlow;color:var(--tx);background:var(--card2)}
+.ib{background:var(--card2);border:1px solid var(--line);color:var(--tx);width:34px;height:34px;border-radius:10px;display:grid;place-items:center;cursor:pointer;font-size:16px;flex:none}
+/* Claro */
+[data-theme=light]{--bg:#f3f5fa;--card:#fff;--card2:#eef1f6;--line:#dfe3ea;--tx:#151a23;--mut:#5d6677;--acc2:#d97706;--hdr:rgba(255,255,255,.92);--navbg:#fff;--mix:#000}
+[data-theme=light] .card{box-shadow:0 1px 3px rgba(20,30,50,.06),0 6px 20px rgba(20,30,50,.04)}
+[data-theme=light] .pill.ok{background:#dcf7e7;color:#137a3e}[data-theme=light] .pill.warn{background:#fff1c9;color:#8a6200}[data-theme=light] .pill.bad{background:#ffe0e1;color:#b4232a}[data-theme=light] .pill.acc{background:#ffe6da;color:#c2410c}[data-theme=light] .pill.blue{background:#dde9ff;color:#1d4ed8}
+[data-theme=light] .banner{background:#fff6dc;color:#7a5a00;border-color:#f1dd9a}
+[data-theme=light] .note{background:#e6efff;color:#1e3a8a}
+[data-theme=light] .btn.danger{background:#ffe0e1;color:#b4232a}
+[data-theme=light] .toast{background:#151a23;color:#fff}
+[data-theme=light] .modal-bg{background:rgba(20,26,35,.45)}
+[data-theme=light] .cal .d.s{color:#fff}
+/* Océano */
+[data-theme=ocean]{--bg:#07152a;--card:#0e2140;--card2:#152c52;--line:#21406e;--tx:#e8f1ff;--mut:#8fa6c8;--acc:#22d3ee;--acc2:#5eead4;--g1:#06b6d4;--g2:#6366f1;--hdr:rgba(7,21,42,.94);--navbg:#0a1a33}
+/* Lima (deportivo claro) */
+[data-theme=lime]{--bg:#f6f8f1;--card:#fff;--card2:#eef2e6;--line:#dce3cf;--tx:#18200f;--mut:#5f6b52;--acc:#65a30d;--acc2:#4d7c0f;--g1:#84cc16;--g2:#16a34a;--hdr:rgba(255,255,255,.92);--navbg:#fff;--mix:#000}
+[data-theme=lime] .card{box-shadow:0 1px 3px rgba(30,40,20,.06)}
+[data-theme=lime] .pill.ok{background:#dcf7e7;color:#137a3e}[data-theme=lime] .pill.warn{background:#fff1c9;color:#8a6200}[data-theme=lime] .pill.bad{background:#ffe0e1;color:#b4232a}[data-theme=lime] .pill.acc{background:#ecfccb;color:#3f6212}[data-theme=lime] .pill.blue{background:#dde9ff;color:#1d4ed8}
+[data-theme=lime] .banner{background:#fff6dc;color:#7a5a00;border-color:#f1dd9a}[data-theme=lime] .note{background:#ecfccb;color:#365314}[data-theme=lime] .btn.danger{background:#ffe0e1;color:#b4232a}[data-theme=lime] .toast{background:#18200f;color:#fff}[data-theme=lime] .modal-bg{background:rgba(20,26,15,.45)}[data-theme=lime] .cal .d.s{color:#fff}
 </style>
 </head>
 <body>
@@ -162,6 +192,10 @@ function detectEx(t){t=norm(t);if(!t.trim())return null;
  return null}
 const CATS={M:{sen:[60,65,71,79,88,94,110],you:[56,60,65,71,79,88,94]},F:{sen:[48,53,58,63,69,77,86],you:[44,48,53,58,63,69,77]}};
 const age=by=>by?new Date().getFullYear()-by:null;
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function ageOf(a){if(!a)return null;if(a.dob){const b=dt(a.dob),n=new Date();let y=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))y--;return y}return age(a.by)}
+const isBday=a=>a&&a.dob&&a.dob.slice(5)===ymd().slice(5);
+function dobTxt(v){if(!v.by)return'';if(!v.bd||!v.bm)return`Año ${v.by} · categoría ${ageGroup(v.by)}`;const d=new Date(v.by,v.bm-1,v.bd);if(d.getMonth()!==v.bm-1)return'<span style="color:var(--bad)">Esa fecha no existe</span>';const ds=ymd(d);return`${ageOf({dob:ds})} años · categoría ${ageGroup(v.by)}`}
 function ageGroup(by){const a=age(by);if(a==null)return'Edad sin dato';if(a<=14)return'Sub-15';if(a<=17)return'Juvenil';if(a<=20)return'Junior';if(a>=35)return'Máster';return'Senior'}
 function catInfo(a){if(!a||!a.sex||!a.bw)return null;const ag=age(a.by);const L=CATS[a.sex][ag!=null&&ag<=17?'you':'sen'];for(const c of L)if(a.bw<=c)return{label:c+' kg',limit:c};return{label:'+'+L[L.length-1]+' kg',limit:null}}
 function sinclair(total,bw,sex){if(!total||!bw||!sex)return null;const A=sex==='F'?0.787004341:0.722762521,b=sex==='F'?153.757:193.609;if(bw>=b)return total;return total*Math.pow(10,A*Math.pow(Math.log10(bw/b),2))}
@@ -242,7 +276,7 @@ const IC={home:'<path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1
 const svg=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 function tabsFor(){return role()==='coach'?[['team','Equipo'],['plans','Planis'],['cal','Agenda'],['tools','Herram.']]:[['home','Hoy'],['plans','Plani'],['cal','Agenda'],['profile','Perfil'],['tools','Herram.']]}
 function render(){
- $('#hdr').innerHTML=`<div class="brand row" style="gap:7px"><span style="width:38px;display:flex">${LOGO}</span><span>BAR<b>RA</b></span></div><div class="f1">${S.me.id?`<span class="pill ${role()==='coach'?'acc':'blue'}">${role()==='coach'?'Profe':'Atleta'}</span>`:''}</div>${S.ready&&S.me.id&&isCoach()?`<button class="btn sm sec" onclick="A.toggleRole()">${role()==='coach'?'Ver como atleta':'Volver a profe'}</button>`:''}${S.me.id?`<button class="btn sm ghost" onclick="A.logout()">Salir</button>`:''}`;
+ $('#hdr').innerHTML=`<div class="brand row" style="gap:7px"><span style="width:38px;display:flex">${LOGO}</span><span>BAR<b>RA</b></span></div><div class="f1">${S.me.id?`<span class="pill ${role()==='coach'?'acc':'blue'}">${role()==='coach'?'Profe':'Atleta'}</span>`:''}</div>${S.ready&&S.me.id&&isCoach()?`<button class="btn sm sec" title="Cambiar vista" onclick="A.toggleRole()">⇄ ${role()==='coach'?'Atleta':'Profe'}</button>`:''}<button class="ib" title="Cambiar diseño" onclick="A.theme()">🎨</button>${S.me.id?`<button class="btn sm ghost" onclick="A.logout()">Salir</button>`:''}`;
  $('#nav').innerHTML=S.ready&&S.me.id?tabsFor().map(([k,l])=>`<button style="--tc:${({home:'#ff5a1f',team:'#ff5a1f',plans:'#8b5cf6',cal:'#3b82f6',profile:'#2ecc71',tools:'#f59e0b'})[k]}" class="${S.tab===k&&!S.view?'on':''}" onclick="A.tab('${k}')">${svg(k==='home'?'home':k)}${l}</button>`).join(''):'';
  $('#app').innerHTML=S.ready?view():'<div class="loading">Cargando…</div>'}
 function softRender(){if(!S.ready)return;const ae=document.activeElement;if(ae&&$('#app').contains(ae)&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName)){if(!S._pend){S._pend=true;ae.addEventListener('blur',()=>{S._pend=false;setTimeout(render,0)},{once:true})}return}render()}
@@ -262,7 +296,7 @@ function vOnboard(){return`<div class="card" style="text-align:center;padding:28
 function nextBookings(u){const b=S.bookings[u];if(!b||!b.slots)return[];const t=ymd();return b.slots.map(id=>({id,...S.slots[id]})).filter(s=>s.date&&s.date>=t).sort((x,y)=>(x.date+x.time).localeCompare(y.date+y.time))}
 function nextComp(){const t=ymd();return Object.entries(S.comps).map(([id,c])=>({id,...c})).filter(c=>c.date>=t).sort((a,b)=>a.date.localeCompare(b.date))[0]}
 function vHome(){const a=myA();if(!a)return vOnboard();const t=ymd();const w=(a.wellness||[]).find(x=>x.d===t);const r=readiness(w);const ci=catInfo(a);const total=(a.rms?.arranque||0)+(a.rms?.envion||0);const sc=sinclair(total,a.bw,a.sex);
- let h=`<h1>Hola, ${esc((a.name||'').split(' ')[0])}</h1><div class="mut sm" style="margin-bottom:12px">${fmtD(t,{weekday:'long',day:'numeric',month:'long'})} · ${ci?'Cat. '+ci.label:'Sin categoría'} · ${ageGroup(a.by)}</div>`;
+ let h=`<h1>${isBday(a)?'¡Feliz cumpleaños':'Hola'}, ${esc((a.name||'').split(' ')[0])}${isBday(a)?'! 🎂':''}</h1><div class="mut sm" style="margin-bottom:12px">${fmtD(t,{weekday:'long',day:'numeric',month:'long'})} · ${ci?'Cat. '+ci.label:'Sin categoría'} · ${ageGroup(a.by)}</div>`;
  h+=`<div class="card cc" style="--cc:#2ecc71"><div class="row sp"><div><div class="sec-t">Sensaciones de hoy</div>${w?`<div class="row"><span class="big" style="font-size:40px;color:var(--${r>=70?'ok':r>=50?'warn':'bad'})">${r??'—'}</span><div class="sm mut">disposición<br>sueño ${w.sueno}/5 · fatiga ${w.fatiga}/5 · dolor ${w.dolor||0}/10</div></div>`:'<div class="mut sm">Cuéntale al profe cómo llegas hoy (30 segundos).</div>'}</div><button class="btn ${w?'sec sm':''}" onclick="A.wellness()">${w?'Editar':'Registrar'}</button></div></div>`;
  h+=`<div class="grid3" style="margin-bottom:12px"><div class="stat lift" style="--lc:${EXC.arranque}"><div class="l">Arranque</div><div class="v">${fk(a.rms?.arranque)}</div></div><div class="stat lift" style="--lc:${EXC.envion}"><div class="l">Envión</div><div class="v">${fk(a.rms?.envion)}</div></div><div class="stat lift" style="--lc:#2ecc71"><div class="l">Total</div><div class="v">${total?fk(total):'—'}</div><div class="xs mut">${sc?'Sinclair '+fk(sc):''}</div></div></div>`;
  const nb=nextBookings(S.me.id);
@@ -292,7 +326,7 @@ function vTeam(){const list=athleteList();const t=ymd();
  const al=list.map(([id,a])=>[id,a,alertsFor(a)]).filter(x=>x[2].length);
  if(al.length)h+=`<div class="card cc" style="--cc:#ff4d4f"><div class="sec-t">Alertas</div>${al.map(([id,a,x])=>`<div class="li click" onclick="A.open('athlete','${id}')"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1"><div class="b">${esc(a.name)}</div><div>${x.map(([c,m])=>`<span class="pill ${c}">${esc(m)}</span>`).join(' ')}</div></div></div>`).join('')}</div>`;
  h+=`<div class="card cc" style="--cc:#8b5cf6">${list.length?list.map(([id,a])=>{const w=(a.wellness||[]).find(x=>x.d===t);const r=readiness(w);const ci=catInfo(a);const tot=(a.rms?.arranque||0)+(a.rms?.envion||0);const coach=(S.config.coaches||[]).includes(id);
-  return`<div class="li click" onclick="A.open('athlete','${id}')"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1"><div class="b">${esc(a.name)} ${coach?'<span class="pill acc">profe</span>':''}${a.manual?'<span class="pill">sin cuenta</span>':''}</div><div class="sm mut">${ci?ci.label:'—'} · Total ${tot?fk(tot):'—'} · ${weekCount(a)} entrenos esta semana</div></div>${r!=null?`<span class="pill ${rdClass(r)}">${r}</span>`:'<span class="pill">sin check-in</span>'}</div>`}).join(''):`<div class="empty">Aún no hay atletas.<br><br>Comparte el link de la app: cada atleta se registra con su nombre y un PIN.<br>También puedes agregar atletas a mano con “+ Atleta”.</div>`}</div>`;
+  return`<div class="li click" onclick="A.open('athlete','${id}')"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1"><div class="b">${esc(a.name)}${isBday(a)?' 🎂':''} ${coach?'<span class="pill acc">profe</span>':''}${a.manual?'<span class="pill">sin cuenta</span>':''}</div><div class="sm mut">${ci?ci.label:'—'} · Total ${tot?fk(tot):'—'} · ${weekCount(a)} entrenos esta semana</div></div>${r!=null?`<span class="pill ${rdClass(r)}">${r}</span>`:'<span class="pill">sin check-in</span>'}</div>`}).join(''):`<div class="empty">Aún no hay atletas.<br><br>Comparte el link de la app: cada atleta se registra con su nombre y un PIN.<br>También puedes agregar atletas a mano con “+ Atleta”.</div>`}</div>`;
  h+=`<div class="card sm mut"><b style="color:var(--tx)">Cómo sumar atletas:</b> mándales el link de la app. Cada uno toca <b>Registrarme</b>, pone su nombre y un PIN, y crea su perfil. Otros profes entran con la contraseña de profe.</div>`;
  return h}
 
@@ -309,7 +343,7 @@ function vAthleteDetail(id){const a=S.athletes[id];if(!a)return`<button class="b
 /* ---------- perfil ---------- */
 function vProfile(id,coachMode){const a=S.athletes[id];if(!a)return'';const step=a.step||1;
  const total=(a.rms?.arranque||0)+(a.rms?.envion||0);const sc=sinclair(total,a.bw,a.sex);const ci=catInfo(a);
- let h=`<div class="card cc" style="--cc:#ff5a1f"><div class="row sp" style="align-items:flex-start"><div class="row"><div class="av" style="width:48px;height:48px;font-size:20px">${esc(initials(a.name))}</div><div><h2 style="margin:0">${esc(a.name)}</h2><div class="mut sm">${a.sex==='F'?'Femenino':a.sex==='M'?'Masculino':''}${a.by?' · '+age(a.by)+' años':''} · ${ageGroup(a.by)}</div></div></div><button class="btn sm sec" onclick="A.editProfile('${id}')">Editar</button></div>
+ let h=`<div class="card cc" style="--cc:#ff5a1f"><div class="row sp" style="align-items:flex-start"><div class="row"><div class="av" style="width:48px;height:48px;font-size:20px">${esc(initials(a.name))}</div><div><h2 style="margin:0">${esc(a.name)}</h2><div class="mut sm">${a.sex==='F'?'Femenino':a.sex==='M'?'Masculino':''}${ageOf(a)!=null?' · '+ageOf(a)+' años':''}${a.dob?' · '+fmtD(a.dob,{day:'numeric',month:'short',year:'numeric'}):''}${isBday(a)?' 🎂':''} · ${ageGroup(a.by)}</div></div></div><button class="btn sm sec" onclick="A.editProfile('${id}')">Editar</button></div>
  <div class="grid3" style="margin-top:12px"><div class="stat"><div class="l">Peso</div><div class="v">${fk(a.bw)}</div><div class="xs mut">${ci?'Cat. '+ci.label:''}</div></div><div class="stat"><div class="l">Total</div><div class="v">${total?fk(total):'—'}</div></div><div class="stat"><div class="l">Sinclair</div><div class="v">${sc?fk(Math.round(sc*10)/10):'—'}</div></div></div></div>`;
  h+=`<div class="card cc" style="--cc:#8b5cf6"><div class="row sp"><h3>Récords (RM)</h3><span class="xs mut">toca uno para ver %</span></div><div class="grid2">${EX.map(e=>{const pts=(a.rmHist||[]).filter(p=>p.ex===e.k).sort((x,y)=>x.d.localeCompare(y.d)).map(p=>({x:p.d,y:p.kg}));const last=pts[pts.length-1];
   return`<div class="stat lift" style="cursor:pointer;--lc:${EXC[e.k]}" onclick="A.pctTable('${id}','${e.k}')"><div class="l">${e.n}</div><div class="row sp"><div class="v">${fk(a.rms?.[e.k])}<span class="xs mut"> kg</span></div><div class="xs mut">${last?fmtD(last.x):''}</div></div>${pts.length>=2?spark(pts,{h:28,color:EXC[e.k]}):''}</div>`}).join('')}</div></div>`;
@@ -470,7 +504,8 @@ function modalBody(){const m=S.modal,v=m.v;
  if(m.t==='profile')return`<h2>${m.isNew?'Nuevo atleta':v.uid===S.me.id?'Mi perfil':'Perfil del atleta'}</h2>
   <label>Nombre</label><input value="${esc(v.name)}" oninput="S.modal.v.name=this.value">
   <label>Sexo</label><div class="seg"><button class="${v.sex==='M'?'on':''}" onclick="S.modal.v.sex='M';renderModal()">Masculino</button><button class="${v.sex==='F'?'on':''}" onclick="S.modal.v.sex='F';renderModal()">Femenino</button></div>
-  <div class="grid2"><div><label>Año de nacimiento</label><input type="number" inputmode="numeric" value="${esc(v.by??'')}" oninput="S.modal.v.by=num(this.value)"></div><div><label>Peso corporal (kg)</label><input type="number" inputmode="decimal" step="0.1" value="${esc(v.bw??'')}" oninput="S.modal.v.bw=num(this.value)"></div></div>
+  <label>Fecha de nacimiento</label><div class="grid3"><select onchange="S.modal.v.bd=num(this.value);A.dobTxt()"><option value="">Día</option>${Array.from({length:31},(_,i)=>`<option ${v.bd===i+1?'selected':''}>${i+1}</option>`).join('')}</select><select onchange="S.modal.v.bm=num(this.value);A.dobTxt()"><option value="">Mes</option>${MESES.map((m,i)=>`<option value="${i+1}" ${v.bm===i+1?'selected':''}>${m}</option>`).join('')}</select><select onchange="S.modal.v.by=num(this.value);A.dobTxt()"><option value="">Año</option>${Array.from({length:75},(_,i)=>new Date().getFullYear()-6-i).map(y=>`<option ${v.by===y?'selected':''}>${y}</option>`).join('')}</select></div><div class="xs mut" id="dobtxt" style="margin-top:4px">${dobTxt(v)}</div>
+  <div class="grid2"><div><label>Peso corporal (kg)</label><input type="number" inputmode="decimal" step="0.1" value="${esc(v.bw??'')}" oninput="S.modal.v.bw=num(this.value)"></div></div>
   <label>Redondear kilos a</label><div class="seg">${[0.5,1,2.5].map(s=>`<button class="${v.step===s?'on':''}" onclick="S.modal.v.step=${s};renderModal()">${String(s).replace('.',',')} kg</button>`).join('')}</div>
   <h3 style="margin-top:16px">RM (kg)</h3><div class="grid2">${EX.map(e=>`<div><label>${e.n}</label><input type="number" inputmode="decimal" step="0.5" value="${v.rms[e.k]??''}" oninput="S.modal.v.rms['${e.k}']=num(this.value)"></div>`).join('')}</div>
   <div class="row" style="margin-top:16px"><button class="btn f1" onclick="A.saveProfile()">Guardar</button><button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`;
@@ -515,6 +550,7 @@ function modalBody(){const m=S.modal,v=m.v;
  if(m.t==='comp')return`<h2>Nueva competencia</h2><label>Nombre</label><input value="${esc(v.name)}" placeholder="Ej: Campeonato Nacional" oninput="S.modal.v.name=this.value"><div class="grid2"><div><label>Fecha</label><input type="date" value="${esc(v.date)}" oninput="S.modal.v.date=this.value"></div><div><label>Lugar</label><input value="${esc(v.place)}" oninput="S.modal.v.place=this.value"></div></div><label>Nota</label><input value="${esc(v.notes)}" placeholder="Opcional (pesaje, horario…)" oninput="S.modal.v.notes=this.value">
   <div class="row" style="margin-top:16px"><button class="btn f1" onclick="A.saveComp()">Crear</button><button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`;
  if(m.t==='pct'){const a=S.athletes[v.uid];const rm=a?.rms?.[v.ex];const st=a?.step||1;return`<h2>${EXN[v.ex]}</h2><div class="sm mut">${esc(a?.name||'')} · RM ${fk(rm)} kg</div>${rm?`<div class="tblwrap" style="margin-top:10px"><table class="x"><tr><th>%</th><th>kg</th><th>Discos por lado (barra ${a.sex==='F'?15:20} + seguros)</th></tr>${[50,55,60,65,70,75,80,85,90,95,100,105].map(p=>{const kg=rnd(rm*p/100,st);const r=plateCalc(kg,a.sex==='F'?15:20,true);return`<tr><td>${p}%</td><td class="kg">${fk(kg)}</td><td class="sm">${r?r.plates.map(x=>String(x[0]).replace('.',',')).join(' + ')||'—':'—'}</td></tr>`}).join('')}</table></div>`:'<div class="mut" style="margin-top:10px">Sin RM registrado.</div>'}<button class="btn sec full" style="margin-top:14px" onclick="A.closeModal()">Cerrar</button>`}
+ if(m.t==='theme')return`<h2>Diseño</h2><div class="sm mut" style="margin-bottom:12px">Se guarda en este dispositivo.</div><div class="thm">${THEMES.map(([k,n,bg,c1,c2,c3])=>`<button class="${(S.theme||'dark')===k?'on':''}" onclick="A.setTheme('${k}')"><div class="pv" style="background:${bg}"><i style="background:linear-gradient(90deg,${c1},${c2});width:70%"></i><i style="background:${c3};width:90%;opacity:.5"></i><i style="background:${c3};width:55%;opacity:.5"></i></div><b>${n}</b></button>`).join('')}</div><button class="btn sec full" style="margin-top:14px" onclick="A.closeModal()">Listo</button>`;
  if(m.t==='img')return`<img src="${esc(v.src)}" style="width:100%;border-radius:10px"><button class="btn sec full" style="margin-top:10px" onclick="A.closeModal()">Cerrar</button>`;
  return''}
 function prTxt(r,a){if(!a||!r.base)return r.name?'<span class="mut xs">Sin % asociado</span>':'';const rm=a.rms?.[r.base];if(r.kg&&rm){if(r.kg>rm&&(r.miss||0)<(r.sets||1))return`<span class="pill ok">🎉 Nuevo RM de ${EXN[r.base]} (antes ${fk(rm)})</span>`;return`<span class="mut xs">${Math.round(r.kg/rm*100)}% de tu RM de ${EXN[r.base]}</span>`}return`<span class="mut xs">Base: ${EXN[r.base]}</span>`}
@@ -522,6 +558,12 @@ function prTxt(r,a){if(!a||!r.base)return r.name?'<span class="mut xs">Sin % aso
 /* ===================== acciones ===================== */
 const A={};
 A.closeModal=closeModal;
+const THEMES=[['dark','Oscuro','#0f1115','#ff5a1f','#ff2d75','#2b303b'],['light','Claro','#f3f5fa','#ff5a1f','#ff2d75','#c9d0db'],['ocean','Océano','#07152a','#06b6d4','#6366f1','#21406e'],['lime','Lima','#f6f8f1','#84cc16','#16a34a','#cfd8c0']];
+function applyTheme(t){S.theme=t;document.documentElement.dataset.theme=t;const m=document.querySelector('meta[name=theme-color]');if(m)m.content=(THEMES.find(x=>x[0]===t)||THEMES[0])[2]}
+try{applyTheme(localStorage.getItem('barra-theme')||'dark')}catch(e){applyTheme('dark')}
+A.theme=()=>openModal({t:'theme',v:{}});
+A.setTheme=t=>{applyTheme(t);try{localStorage.setItem('barra-theme',t)}catch(e){}renderModal();render()};
+A.dobTxt=()=>{const el=$('#dobtxt');if(el)el.innerHTML=dobTxt(S.modal.v)};
 A.tab=t=>{S.tab=t;S.view=null;S.confirm=null;if(role()==='athlete')watchLogs(S.me.id);render();scrollTo(0,0)};
 A.open=(t,id)=>{S.view={t,id};S.confirm=null;S.sheetIdx=0;if(t==='athlete')watchLogs(id);render();scrollTo(0,0)};
 A.back=()=>{S.view=null;S.confirm=null;if(role()==='athlete')watchLogs(S.me.id);render();scrollTo(0,0)};
@@ -534,11 +576,11 @@ A.mon=d=>{const [Y,M]=S.calMonth.split('-').map(Number);const x=new Date(Y,M-1+d
 function twoTap(key,fn){if(S.confirm===key){S.confirm=null;fn()}else{S.confirm=key;S.modal?renderModal():render();setTimeout(()=>{if(S.confirm===key){S.confirm=null;S.modal?renderModal():render()}},4000)}}
 
 // perfil
-A.editProfile=u=>{const a=S.athletes[u];openModal({t:'profile',isNew:!a,v:{uid:u,name:a?.name||(u===S.me.id?S.me.name:''),sex:a?.sex||'M',by:a?.by??null,bw:a?.bw??null,step:a?.step||1,rms:{...(a?.rms||{})}}})};
+A.editProfile=u=>{const a=S.athletes[u];openModal({t:'profile',isNew:!a,v:{uid:u,name:a?.name||(u===S.me.id?S.me.name:''),sex:a?.sex||'M',by:a?.by??null,bd:a?.dob?+a.dob.slice(8,10):null,bm:a?.dob?+a.dob.slice(5,7):null,bw:a?.bw??null,step:a?.step||1,rms:{...(a?.rms||{})}}})};
 A.addAthlete=()=>{const u='m'+uid();S.modal={t:'profile',isNew:true,manual:true,v:{uid:u,name:'',sex:'M',by:null,bw:null,step:1,rms:{}}};renderModal()};
 function addHist(arr,o,key){const i=arr.findIndex(x=>x.d===o.d&&(key?x[key]===o[key]:true));if(i>=0)arr.splice(i,1);arr.push(o)}
 A.saveProfile=async()=>{const m=S.modal,v=m.v;if(!v.name||!v.name.trim())return toast('Escribe el nombre');const prev=S.athletes[v.uid];const a=prev?clone(prev):{rmHist:[],bwHist:[],wellness:[],lastLogs:[],goals:{},createdAt:ymd()};
- if(m.manual)a.manual=true;a.name=v.name.trim();a.sex=v.sex;a.by=v.by||null;a.step=v.step||1;a.rms=a.rms||{};a.rmHist=a.rmHist||[];a.bwHist=a.bwHist||[];const d=ymd();
+ if(m.manual)a.manual=true;a.name=v.name.trim();a.sex=v.sex;a.by=v.by||null;if(v.by&&v.bm&&v.bd){const d=new Date(v.by,v.bm-1,v.bd);if(d.getMonth()!==v.bm-1)return toast('La fecha de nacimiento no existe');a.dob=ymd(d)}else a.dob=null;a.step=v.step||1;a.rms=a.rms||{};a.rmHist=a.rmHist||[];a.bwHist=a.bwHist||[];const d=ymd();
  for(const e of EX){const nv=v.rms[e.k];if(nv==null||nv<=0){delete a.rms[e.k];continue}if(a.rms[e.k]!==nv){a.rms[e.k]=nv;addHist(a.rmHist,{ex:e.k,kg:nv,d},'ex')}}
  if(v.bw&&v.bw!==a.bw){a.bw=v.bw;addHist(a.bwHist,{d,kg:v.bw})}else if(!v.bw)a.bw=null;
  a.rmHist=a.rmHist.slice(-300);a.bwHist=a.bwHist.slice(-200);a.updatedAt=Date.now();
