@@ -190,7 +190,8 @@ function detectEx(t){t=norm(t);if(!t.trim())return null;
  if(/press/.test(t))return'pushpress';
  if(/sentadilla|squat|\bsent\b/.test(t))return'strasera';
  return null}
-const CATS={M:{sen:[60,65,71,79,88,94,110],you:[56,60,65,71,79,88,94]},F:{sen:[48,53,58,63,69,77,86],you:[44,48,53,58,63,69,77]}};
+/* Categorías IWF vigentes desde el 1 de agosto de 2026 */
+const CATS={M:{sen:[60,65,70,75,85,95,110],you:[55,60,65,70,75,85,95]},F:{sen:[49,53,57,61,69,77,86],you:[45,49,53,57,61,69,77]}};
 const age=by=>by?new Date().getFullYear()-by:null;
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function ageOf(a){if(!a)return null;if(a.dob){const b=dt(a.dob),n=new Date();let y=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))y--;return y}return age(a.by)}
