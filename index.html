@@ -385,7 +385,7 @@ function logsHTML(id,coachMode){const L=Object.entries(S.logs).sort((x,y)=>(y[1]
  return L.map(([lid,l])=>`<div class="li" style="display:block"><div class="row sp"><b>${fmtD(l.d,{weekday:'short',day:'numeric',month:'short'})} · ${esc(l.sName||'Entrenamiento')}</b>${!coachMode?`<button class="btn sm ghost" onclick="A.logEdit('${lid}')">Editar</button>`:''}</div>
   <div class="sm">${(l.rows||[]).filter(r=>r.name).map(r=>`<span class="chip">${esc(r.name)} <b class="kg">${fk(r.kg)}</b>${r.reps?'×'+r.reps:''}${r.sets>1?'×'+r.sets:''}${r.rpe?` <span class="mut">RPE ${r.rpe}</span>`:''}${r.miss?` <span style="color:var(--bad)">${r.miss} fallo${r.miss>1?'s':''}</span>`:''}</span>`).join('')}</div>
   ${l.nota?`<div class="sm mut" style="margin-top:4px">“${esc(l.nota)}”</div>`:''}
-  ${(l.videos||[]).map(v=>v.drive?`<iframe src="https://drive.google.com/file/d/${encodeURIComponent(v.drive)}/preview" allow="autoplay" style="width:100%;aspect-ratio:16/9;border:0;border-radius:10px;margin-top:6px;background:#000"></iframe><div class="xs mut" style="margin-top:3px">Si dice que se está procesando, Drive todavía lo está preparando: vuelve en unos minutos. · <a href="https://drive.google.com/file/d/${encodeURIComponent(v.drive)}/view" target="_blank" rel="noopener" style="color:var(--acc)">Abrir en Drive</a></div>`:`<video controls preload="metadata" playsinline src="${esc(srcOf(v))}"></video>`).join('')}
+  ${(l.videos||[]).map(v=>v.drive?`<video controls preload="metadata" playsinline src="https://drive.google.com/uc?export=download&id=${encodeURIComponent(v.drive)}" onerror="A.vidFallback(this,'${encodeURIComponent(v.drive)}')"></video><div class="xs mut" style="margin-top:3px">¿No se ve completo? <a href="https://drive.google.com/file/d/${encodeURIComponent(v.drive)}/view" target="_blank" rel="noopener" style="color:var(--acc)">Abrir en Drive</a></div>`:`<video controls preload="metadata" playsinline src="${esc(srcOf(v))}"></video>`).join('')}
   ${(l.coachNotes||[]).map(n=>`<div class="note"><span class="xs" style="opacity:.7">Profe · ${fmtD(n.d)}</span><br>${esc(n.text)}</div>`).join('')}
   ${coachMode?`<div class="row" style="margin-top:6px"><input id="cn_${lid}" name="cn_${lid}" autocomplete="off" placeholder="Comentario para el atleta…"><button class="btn sm" onclick="A.coachNote('${id}','${lid}')">Enviar</button></div>`:''}</div>`).join('')}
 
@@ -723,6 +723,8 @@ A.newCoach=()=>openModal({t:'coach',v:{name:'',pass:''}});
 A.myPass=()=>openModal({t:'mypass',v:{old:'',pass:''}});
 A.saveCoach=async()=>{const v=S.modal.v;try{await call('createCoach',{name:v.name,pass:v.pass});const st=await call('status');S.coaches=st.coaches;closeModal();render();toast('Profe creado. Entra con «'+v.name.trim()+'» y su contraseña')}catch(e){errToast(e)}};
 A.savePass=async()=>{const v=S.modal.v;try{await call('changePass',{old:v.old,pass:v.pass});closeModal();toast('Contraseña cambiada')}catch(e){errToast(e)}};
+
+A.vidFallback=(el,id)=>{if(!el||!el.parentNode)return;const f=document.createElement('iframe');f.src='https://drive.google.com/file/d/'+id+'/preview';f.allow='autoplay';f.style.cssText='width:100%;aspect-ratio:16/9;border:0;border-radius:10px;margin-top:6px;background:#000';el.replaceWith(f)};
 
 boot();
 </script>
