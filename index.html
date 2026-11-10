@@ -681,7 +681,7 @@ A.book=async id=>{const me=S.me.id;const b=clone(S.bookings[me])||{slots:[]};con
 /* ===================== login ===================== */
 function vLogin(){const L=S.lg;if(S.bootErr)return`<div class="card"><h2>No se pudo conectar</h2><p class="mut">${esc(S.bootErr)}</p></div>`;
  let h=`<div class="card" style="text-align:center;padding:24px 18px"><div style="width:120px;margin:0 auto 6px">${LOGO}</div><div class="brand" style="font-size:42px">BAR<b>RA</b></div><div class="mut">Halterofilia · planificación y seguimiento</div></div><div class="card">`;
- if(!S.coachSet){h+=`<h2>Configuración inicial</h2><div class="sm mut">Crea la contraseña del profe. Con ella entran los profes; los atletas se registran con su nombre y un PIN.</div><label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Contraseña de profe (mín. 6)</label><input type="password" oninput="A.lg('pass',this.value)"><label>Repite la contraseña</label><input type="password" oninput="A.lg('pass2',this.value)"><button class="btn full" style="margin-top:14px" onclick="A.doLogin()">${S.lgBusy?'Creando…':'Crear y entrar'}</button>`}
+ if(!S.coachSet){h+=`<h2>Configuración inicial</h2><div class="sm mut">Crea la contraseña del profe. Con ella entran los profes; los atletas se registran con su nombre y un PIN.</div><label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Contraseña de profe (mín. 4)</label><input type="password" oninput="A.lg('pass',this.value)"><label>Repite la contraseña</label><input type="password" oninput="A.lg('pass2',this.value)"><button class="btn full" style="margin-top:14px" onclick="A.doLogin()">${S.lgBusy?'Creando…':'Crear y entrar'}</button>`}
  else{h+=`<div class="seg"><button class="${L.role==='athlete'?'on':''}" onclick="S.lg.role='athlete';render()">Soy atleta</button><button class="${L.role==='coach'?'on':''}" onclick="S.lg.role='coach';render()">Soy profe</button></div>`;
   if(L.role==='athlete')h+=`<div class="seg" style="margin-top:8px"><button class="${L.mode==='login'?'on':''}" onclick="S.lg.mode='login';render()">Entrar</button><button class="${L.mode==='reg'?'on':''}" onclick="S.lg.mode='reg';render()">Registrarme</button></div><label>Nombre y apellido</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>PIN (4 a 6 números)</label><input type="password" inputmode="numeric" value="${esc(L.pin||'')}" oninput="A.lg('pin',this.value)">`;
   else h+=`<label>Tu nombre</label><input value="${esc(L.name||'')}" oninput="A.lg('name',this.value)"><label>Contraseña de profe</label><input type="password" value="${esc(L.pass||'')}" oninput="A.lg('pass',this.value)">`;
@@ -689,7 +689,7 @@ function vLogin(){const L=S.lg;if(S.bootErr)return`<div class="card"><h2>No se p
  return h+'</div>'}
 A.lg=(k,v)=>{S.lg[k]=v};
 A.doLogin=async()=>{const L=S.lg;if(S.lgBusy)return;
- if(!S.coachSet){if(!L.name||!L.pass)return toast('Completa nombre y contraseña');if(L.pass.length<6)return toast('La contraseña debe tener al menos 6 caracteres');if(L.pass!==L.pass2)return toast('Las contraseñas no coinciden')}
+ if(!S.coachSet){if(!L.name||!L.pass)return toast('Completa nombre y contraseña');if(L.pass.length<4)return toast('La contraseña debe tener al menos 4 caracteres');if(L.pass!==L.pass2)return toast('Las contraseñas no coinciden')}
  else if(!L.name)return toast('Escribe tu nombre');
  S.lgBusy=true;render();
  try{let r;if(!S.coachSet){r=await call('setupCoach',{name:L.name,pass:L.pass});S.coachSet=true}
