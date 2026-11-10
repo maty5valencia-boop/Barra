@@ -337,7 +337,8 @@ function vAthleteDetail(id){const a=S.athletes[id];if(!a)return`<button class="b
  let h=`<button class="back" onclick="A.back()">‹ Equipo</button>`;
  if(al.length)h+=`<div class="card">${al.map(([c,m])=>`<span class="pill ${c}">${esc(m)}</span>`).join(' ')}</div>`;
  h+=vProfile(id,true);
- if(!a.manual&&id!==S.me.id&&id[0]==='a')h+=`<div class="card cc" style="--cc:#f59e0b"><div class="sec-t">¿Olvidó su PIN?</div><div class="row"><input id="newpin" type="password" inputmode="numeric" placeholder="Nuevo PIN (4 a 6 números)"><button class="btn sm sec" onclick="A.resetPin('${id}')">Cambiar</button></div></div>`;
+ if(a.manual)h+=`<div class="card cc" style="--cc:#2ecc71"><div class="sec-t">Darle acceso a la app</div><div class="sm mut" style="margin-bottom:8px">Entrará con su nombre «${esc(a.name)}» y el PIN que pongas.</div><div class="row"><input id="accpin" type="text" inputmode="numeric" maxlength="6" placeholder="PIN (4 a 6 números)"><button class="btn sm" onclick="A.createAccess('${id}')">Crear acceso</button></div></div>`;
+ if(!a.manual&&id!==S.me.id&&id[0]!=='c')h+=`<div class="card cc" style="--cc:#f59e0b"><div class="sec-t">Acceso · entra con «${esc(a.name)}»</div><div class="sm mut" style="margin-bottom:8px">¿Olvidó su PIN? Ponle uno nuevo:</div><div class="row"><input id="newpin" type="password" inputmode="numeric" placeholder="Nuevo PIN (4 a 6 números)"><button class="btn sm sec" onclick="A.resetPin('${id}')">Cambiar</button></div></div>`;
  h+=`<div class="card row sp"><div class="sm mut">${a.manual?'Atleta sin cuenta, administrado por el profe.':id===S.me.id?'Este es tu propio perfil de atleta. Al eliminarlo se borran tu perfil y tus registros, pero sigues entrando como profe.':'Eliminar al atleta borra su perfil, sus entrenamientos, sus reservas y su cuenta (nombre y PIN).'}</div><button class="btn sm danger" onclick="A.delAthlete('${id}')">${S.confirm==='da'+id?'¿Seguro? Toca otra vez':'Eliminar atleta'}</button></div>`;
  return h}
 
@@ -503,7 +504,8 @@ function renderModal(){const el=$('#modal');if(!S.modal){el.innerHTML='';return}
 const scaleBtns=(key,from,to)=>`<div class="scale">${Array.from({length:to-from+1},(_,i)=>i+from).map(n=>`<button class="${S.modal.v[key]===n?'on':''}" onclick="S.modal.v['${key}']=${n};renderModal()">${n}</button>`).join('')}</div>`;
 function modalBody(){const m=S.modal,v=m.v;
  if(m.t==='profile')return`<h2>${m.isNew?'Nuevo atleta':v.uid===S.me.id?'Mi perfil':'Perfil del atleta'}</h2>
-  <label>Nombre</label><input value="${esc(v.name)}" oninput="S.modal.v.name=this.value">
+  <label>Nombre y apellido</label><input value="${esc(v.name)}" oninput="S.modal.v.name=this.value;const u=$('#usrtxt');if(u)u.textContent=this.value||'…'">
+  ${m.isNew&&m.manual?`<div class="note" style="margin-top:10px"><b>Acceso a la app</b><br><span class="sm">El atleta entra con su nombre «<b id="usrtxt">${esc(v.name||'…')}</b>» y este PIN. Déjalo vacío si no usará la app.</span><input style="margin-top:8px" type="text" inputmode="numeric" maxlength="6" placeholder="PIN (4 a 6 números)" value="${esc(v.pin||'')}" oninput="S.modal.v.pin=this.value.trim()"></div>`:''}
   <label>Sexo</label><div class="seg"><button class="${v.sex==='M'?'on':''}" onclick="S.modal.v.sex='M';renderModal()">Masculino</button><button class="${v.sex==='F'?'on':''}" onclick="S.modal.v.sex='F';renderModal()">Femenino</button></div>
   <label>Fecha de nacimiento</label><div class="grid3"><select onchange="S.modal.v.bd=num(this.value);A.dobTxt()"><option value="">Día</option>${Array.from({length:31},(_,i)=>`<option ${v.bd===i+1?'selected':''}>${i+1}</option>`).join('')}</select><select onchange="S.modal.v.bm=num(this.value);A.dobTxt()"><option value="">Mes</option>${MESES.map((m,i)=>`<option value="${i+1}" ${v.bm===i+1?'selected':''}>${m}</option>`).join('')}</select><select onchange="S.modal.v.by=num(this.value);A.dobTxt()"><option value="">Año</option>${Array.from({length:75},(_,i)=>new Date().getFullYear()-6-i).map(y=>`<option ${v.by===y?'selected':''}>${y}</option>`).join('')}</select></div><div class="xs mut" id="dobtxt" style="margin-top:4px">${dobTxt(v)}</div>
   <div class="grid2"><div><label>Peso corporal (kg)</label><input type="number" inputmode="decimal" step="0.1" value="${esc(v.bw??'')}" oninput="S.modal.v.bw=num(this.value)"></div></div>
@@ -585,7 +587,11 @@ A.saveProfile=async()=>{const m=S.modal,v=m.v;if(!v.name||!v.name.trim())return 
  for(const e of EX){const nv=v.rms[e.k];if(nv==null||nv<=0){delete a.rms[e.k];continue}if(a.rms[e.k]!==nv){a.rms[e.k]=nv;addHist(a.rmHist,{ex:e.k,kg:nv,d},'ex')}}
  if(v.bw&&v.bw!==a.bw){a.bw=v.bw;addHist(a.bwHist,{d,kg:v.bw})}else if(!v.bw)a.bw=null;
  a.rmHist=a.rmHist.slice(-300);a.bwHist=a.bwHist.slice(-200);a.updatedAt=Date.now();
- if(await put('athletes/'+v.uid,a)){closeModal();toast('Perfil guardado')}};
+ let msg='Perfil guardado';
+ try{if(m.isNew&&m.manual&&v.pin){if(!/^\d{4,6}$/.test(v.pin))return toast('El PIN debe tener 4 a 6 números');await call('createAccount',{uid:v.uid,name:a.name,pin:v.pin});a.manual=false;msg=`Atleta creado. Entra con «${a.name}» y PIN ${v.pin}`}
+  else if(prev&&!prev.manual&&prev.name!==a.name&&v.uid[0]!=='c')await call('renameAccount',{uid:v.uid,name:a.name})}catch(e){return errToast(e)}
+ if(await put('athletes/'+v.uid,a)){closeModal();toast(msg)}};
+A.createAccess=async u=>{const el=$('#accpin');const pin=el&&el.value.trim();if(!/^\d{4,6}$/.test(pin||''))return toast('El PIN debe tener 4 a 6 números');const a=clone(S.athletes[u]);if(!a)return;try{await call('createAccount',{uid:u,name:a.name,pin});a.manual=false;if(await put('athletes/'+u,a))toast(`Listo. Entra con «${a.name}» y PIN ${pin}`)}catch(e){errToast(e)}};
 A.toggleCoach=async u=>{const c=clone(S.config)||{};c.coaches=c.coaches||[];c.coaches=c.coaches.includes(u)?c.coaches.filter(x=>x!==u):[...c.coaches,u];if(await put('config/main',c))toast('Permisos actualizados')};
 A.delAthlete=u=>twoTap('da'+u,async()=>{try{await call('deleteAthlete',{uid:u});for(const p of Object.keys(LS))if(p==='athletes/'+u||p.startsWith('athletes/'+u+'/')||p==='bookings/'+u)delete LS[p];A.back();localSync();toast('Atleta eliminado');refresh()}catch(e){errToast(e)}});
 A.pctTable=(u,ex)=>openModal({t:'pct',v:{uid:u,ex}});
