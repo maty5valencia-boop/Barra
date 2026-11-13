@@ -178,6 +178,10 @@ header.top{background:var(--hdr)}nav.bottom{background:var(--navbg)}
 .qb button span{color:var(--mut)}
 .qb button.me{background:linear-gradient(135deg,#2ecc71,#16a34a);border:0;color:#fff}.qb button.me span{color:rgba(255,255,255,.9)}
 .qb button.full{opacity:.55}
+.bdg{display:flex;gap:8px;align-items:flex-start;padding:8px;border-radius:10px;background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--lc,var(--line))}
+.bdg.off{opacity:.5;filter:grayscale(1)}
+.bdg .bi{font-size:22px;line-height:1;flex:none;margin-top:2px}
+.bdg .bbar{height:4px;border-radius:9px;background:var(--line);margin-top:5px;overflow:hidden}.bdg .bbar i{display:block;height:100%;background:var(--lc,var(--mut));border-radius:9px}
 /* entrada */
 .who2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .who2 button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card2);color:var(--tx);font:600 15px Barlow;cursor:pointer}
@@ -410,6 +414,7 @@ function alertsFor(a){const out=[];const t=ymd();const ws=(a.wellness||[]).slice
 function weekCount(a){const m=mondayOf(ymd());return(a.lastLogs||[]).filter(l=>l.d>=m).length}
 function vTeam(){const list=athleteList();const t=ymd();const orphans=Object.entries(S.athletes).filter(([i,a])=>!a.coach);
  let h=`<div class="row" style="gap:12px;margin-bottom:12px"><div style="width:64px;flex:none">${LOGO}</div><div><div class="sec-t" style="margin:0">Halteros · Centro de entrenamiento</div><div class="b" style="font-size:18px">#SomosFuertes 💪</div></div></div><div class="row sp"><div><h1 style="margin:0">Mi equipo</h1><div class="sm mut">Profe ${esc(S.me.name)}</div></div><button class="btn sm" onclick="A.addAthlete()">+ Atleta</button></div>`;
+ h+=coachDay();
  const al=list.map(([id,a])=>[id,a,alertsFor(a)]).filter(x=>x[2].length);
  if(al.length)h+=`<div class="card cc" style="--cc:#ff4d4f"><div class="sec-t">Alertas</div>${al.map(([id,a,x])=>`<div class="li click" onclick="A.open('athlete','${id}')"><div class="av" style="background:${avc(a.name)}26;color:${avc(a.name)}">${esc(initials(a.name))}</div><div class="f1"><div class="b">${esc(a.name)}</div><div>${x.map(([c,m])=>`<span class="pill ${c}">${esc(m)}</span>`).join(' ')}</div></div></div>`).join('')}</div>`;
  h+=`<div class="card cc" style="--cc:#8b5cf6">${list.length?list.map(([id,a])=>{const w=(a.wellness||[]).find(x=>x.d===t);const r=readiness(w);const ci=catInfo(a);const tot=(a.rms?.arranque||0)+(a.rms?.envion||0);const coach=id[0]==='c';const vid=(a.lastLogs||[]).filter(l=>l.v&&daysUntil(l.d)>=-7).reduce((s,l)=>s+l.v,0);
@@ -834,6 +839,19 @@ function quickBook(){const t=ymd();const now=new Date();const hm=String(now.getH
  up.filter(([id,s])=>s.date===sel).forEach(([id,s])=>{const n=cnt(id),cap=s.cap||0,me=mine.has(id),full=cap&&n>=cap&&!me;const left=cap?cap-n:null;
   h+=`<button class="${me?'me':full?'full':''}" ${full?`onclick="A.waitT('${id}')"`:`onclick="A.book('${id}')"`}><b>${esc(s.time)}</b><span>${me?'✓ Reservada':full?'Llena · espera':left!=null?left+(left===1?' cupo':' cupos'):'Reservar'}</span></button>`});
  return h+`</div><div class="xs mut" style="margin-top:6px">Toca una hora para reservar. Si ya la reservaste, tócala de nuevo para cancelar.</div></div>`}
+function coachDay(){const t=ymd();const now=new Date();const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+ const up=Object.entries(S.slots).filter(([id,s])=>s.date>=t).sort((a,b)=>(a[1].date+a[1].time).localeCompare(b[1].date+b[1].time));
+ const days=[...new Set(up.map(([id,s])=>s.date))].slice(0,7);
+ if(!days.length)return`<div class="card cc" style="--cc:#3b82f6"><div class="sec-t">📅 Quiénes vienen a entrenar</div><div class="sm mut">No hay horarios publicados.</div><button class="btn sm" style="margin-top:8px" onclick="A.tab('cal')">Ir a la Agenda</button></div>`;
+ const sel=days.includes(S.cdDay)?S.cdDay:days[0];
+ const who=id=>Object.entries(S.bookings).filter(([u,b])=>(b.slots||[]).includes(id)).map(([u])=>u);
+ const lbl=d=>d===t?'Hoy':d===addDays(t,1)?'Mañana':(x=>x[0].toUpperCase()+x.slice(1))(fmtD(d,{weekday:'short',day:'numeric'}));
+ const tot=d=>up.filter(([id,s])=>s.date===d).reduce((n,[id])=>n+who(id).length,0);
+ let h=`<div class="card cc" style="--cc:#3b82f6"><div class="row sp"><div class="sec-t" style="margin:0">📅 Quiénes vienen a entrenar</div><button class="btn sm ghost" onclick="S.calSel='${sel}';S.calMonth='${sel.slice(0,7)}';A.tab('cal')">Agenda</button></div>
+ <div class="tabs" style="margin-top:8px">${days.map(d=>`<button class="${d===sel?'on':''}" onclick="S.cdDay='${d}';render()">${lbl(d)} · ${tot(d)}</button>`).join('')}</div>`;
+ up.filter(([id,s])=>s.date===sel).forEach(([id,s])=>{const w=who(id);const att=s.att||[];const past=s.date===t&&s.time<=hm;const wait=Object.entries(S.bookings).filter(([u,b])=>(b.wait||[]).includes(id)).length;
+  h+=`<div class="li" style="align-items:flex-start;${past?'opacity:.6':''}"><div style="width:56px;flex:none"><div class="b" style="font:800 20px 'Barlow Condensed'">${esc(s.time)}</div><div class="xs mut">${w.length}/${s.cap||'∞'}</div></div><div class="f1">${w.length?w.map(u=>{const a=S.athletes[u];const n=a?.name||'Atleta';const ok=att.includes(u);return`<span class="chip" style="${ok?'border-color:var(--ok)':''}">${ok?'✅ ':''}${esc(n)}</span>`}).join(''):'<span class="xs mut">Nadie agendado todavía</span>'}${wait?`<div class="xs mut" style="margin-top:4px">⏳ ${wait} en lista de espera</div>`:''}</div>${s.cap&&w.length>=s.cap?'<span class="pill bad">Llena</span>':''}</div>`});
+ return h+`<div class="xs mut" style="margin-top:6px">Para marcar asistencia, entra a la Agenda y toca a cada atleta.</div></div>`}
 const agCfg=()=>LS['config/agenda_'+payOwner()]||{};
 A.saveAg=async()=>{const v=Math.max(0,Math.min(72,+($('#agh')||{}).value||0));if(await put('config/agenda_'+S.me.id,{cancelH:v||null,coach:S.me.id}))toast(v?'Cancelación hasta '+v+' h antes':'Sin límite para cancelar')};
 A.waitT=async id=>{const me=S.me.id;const b=clone(S.bookings[me])||{slots:[]};const t=ymd();b.wait=(b.wait||[]).filter(x=>S.slots[x]&&S.slots[x].date>=t);
@@ -924,23 +942,83 @@ A.payPlanEdit=id=>{const a=S.athletes[id];if(!a)return;openModal({t:'payPlan',v:
 A.savePayPlan=async()=>{const v=S.modal.v;const a=clone(S.athletes[v.id]);if(!a)return;delete a.plan;delete a.fee;if(v.plan==='__fee'){const f=+String(v.fee).replace(/\D/g,'');if(!f)return toast('Escribe el monto');a.fee=f}else if(v.plan)a.plan=v.plan;a.phone=v.phone||null;if(await put('athletes/'+v.id,a)){closeModal();toast('Guardado')}};
 
 /* ===================== logros ===================== */
-function badges(id){const a=S.athletes[id];if(!a)return[];const t=ymd();const logs=(a.lastLogs||[]).slice();const wk=new Set(logs.map(l=>mondayOf(l.d)));
- let streak=0,w=mondayOf(t);if(!wk.has(w))w=addDays(w,-7);while(wk.has(w)){streak++;w=addDays(w,-7)}
- const m=t.slice(0,7);const prs=(a.rmHist||[]).filter(h=>String(h.d||'').slice(0,7)===m).length;
- const full=Object.entries(S.plans).filter(([pid,p])=>planVisible(p,id)&&(p.sessions||[]).length&&new Set(logs.filter(l=>l.planId===pid&&l.s!=null).map(l=>l.s)).size>=p.sessions.length).length;
- const ac=attCount(id);const tot=(a.rms?.arranque||0)+(a.rms?.envion||0);
- const meds=Object.values(S.comps).map(c=>(c.results||{})[id]).filter(r=>r&&r.place>=1&&r.place<=3);
- const comps=Object.values(S.comps).filter(c=>(c.results||{})[id]).length;
+/* Logros por niveles: 🥉 bronce · 🥈 plata · 🥇 oro · 💎 diamante. Las metas de fuerza son distintas para hombres y mujeres. */
+const LV=[['🥉','Bronce','#cd7f32'],['🥈','Plata','#9aa3b2'],['🥇','Oro','#e6b800'],['💎','Diamante','#38bdf8'],['🔥','Élite','#ef4444'],['👑','Leyenda','#a855f7']];
+const BT={
+ arr:{M:[60,80,100,120,140,160],F:[40,55,70,85,100,115]},
+ env:{M:[80,100,125,150,175,200],F:[50,70,90,110,130,150]},
+ tot:{M:[140,180,225,270,315,360],F:[90,125,160,195,230,265]},
+ sin:{M:[180,230,280,330,380,430],F:[140,190,240,290,330,370]},
+ sqt:{M:[100,140,180,220,260,300],F:[70,100,130,160,190,220]},
+ sqf:{M:[80,120,150,180,220,260],F:[60,85,110,135,160,185]},
+ car:{M:[90,110,135,160,185,210],F:[55,75,95,115,135,155]},
+ jrk:{M:[80,100,125,150,175,200],F:[50,70,90,110,130,150]},
+ pp:{M:[60,80,100,120,140,160],F:[40,50,65,80,95,110]},
+ tar:{M:[80,100,125,150,175,200],F:[55,70,90,110,130,150]},
+ ten:{M:[100,130,160,190,220,250],F:[70,90,115,140,165,190]},
+ arrbw:{M:[0.75,1,1.25,1.5,1.75,2],F:[0.6,0.8,1,1.2,1.4,1.6]},
+ envbw:{M:[1,1.25,1.5,1.75,2,2.25],F:[0.8,1,1.2,1.4,1.6,1.8]},
+ sqbw:{M:[1.5,1.75,2,2.5,2.75,3],F:[1.25,1.5,1.75,2,2.25,2.5]}};
+function badges(id){const a=S.athletes[id];if(!a)return[];const t=ymd();const sx=a.sex==='F'?'F':'M';const r=a.rms||{};const logs=(a.lastLogs||[]).slice();
+ const wk=new Set(logs.map(l=>mondayOf(l.d)));let streak=0,w=mondayOf(t);if(!wk.has(w))w=addDays(w,-7);while(wk.has(w)){streak++;w=addDays(w,-7)}
+ const fullPlans=Object.entries(S.plans).filter(([pid,p])=>planVisible(p,id)&&(p.sessions||[]).length&&new Set(logs.filter(l=>l.planId===pid&&l.s!=null).map(l=>l.s)).size>=p.sessions.length).length;
+ const att=Object.values(S.slots).filter(s=>(s.att||[]).includes(id)&&s.date<=t);const ac=attCount(id);
+ const res=Object.values(S.comps).map(c=>(c.results||{})[id]).filter(Boolean);const pods=res.filter(x=>x.place>=1&&x.place<=3).length;const golds=res.filter(x=>x.place===1).length;
+ const perfect=res.some(x=>(x.sn||[]).filter(Boolean).length===3&&(x.cj||[]).filter(Boolean).length===3&&[...(x.snOk||[]),...(x.cjOk||[])].every(v=>v!==false));
+ const tot=r.arranque&&r.envion?r.arranque+r.envion:0;const sin=tot&&a.bw?sinclair(tot,a.bw,sx):0;
+ const hist=a.rmHist||[];const byDay={};hist.forEach(h=>{byDay[h.d]=(byDay[h.d]||0)+1});
+ const vids=logs.reduce((n,l)=>n+(l.v||0),0);const wells=(a.wellness||[]).length;
+ const bday=a.dob?a.dob.slice(5):null;const trainedBday=bday&&logs.some(l=>String(l.d).slice(5)===bday);
+ const months=[...Array(3)].map((_,i)=>{const[Y,M]=t.slice(0,7).split('-').map(Number);return ymd(new Date(Y,M-1-i,1)).slice(0,7)});const alDia=months.every(m=>payOf(a,m)&&payOf(a,m).st==='ok');
+ const ratio=r.arranque&&r.envion?r.arranque/r.envion:0;
+ const kg=v=>fk(v)+' kg',x=v=>fk(Math.round(v*100)/100)+'×',n=u=>v=>v+' '+u;
+ const T=(g,i,tt,val,th,f,hint)=>({g,i,t:tt,val:val||0,th,f,hint});const O=(g,i,tt,on,d,hint)=>({g,i,t:tt,one:true,on:!!on,d,hint});
  return[
-  ['🔥','Racha',streak?streak+' semana'+(streak>1?'s':'')+' seguidas':'Entrena esta semana',streak>=2],
-  ['⚡','Récords del mes',prs?prs+' nuevo'+(prs>1?'s':'')+' RM':'Sube un RM este mes',prs>0],
-  ['✅','Plani completa',full?full+' plani'+(full>1?'s':'')+' al 100%':'Registra todas las sesiones',full>0],
-  ['📅','Constante',ac+' clases en 4 semanas',ac>=8],
-  ['💯','Club 100',a.rms?.envion?fk(a.rms.envion)+' kg de envión':'Envión de 100 kg',(a.rms?.envion||0)>=100],
-  ['🏋️','Club 200',tot?fk(tot)+' kg de total':'Total de 200 kg',tot>=200],
-  ['🏆','Competidor',comps?comps+' competencia'+(comps>1?'s':''):'Compite una vez',comps>0],
-  ['🥇','Podio',meds.length?meds.map(r=>medal(r.place)).join(''):'Sube al podio',meds.length>0]]}
-function badgesHTML(id){const b=badges(id);const n=b.filter(x=>x[3]).length;return`<div class="card cc" style="--cc:#ffcf1f"><div class="row sp"><h3>Logros</h3><span class="pill">${n}/${b.length}</span></div><div class="grid2" style="gap:8px">${b.map(([i,t,d,on])=>`<div class="row" style="gap:8px;padding:8px;border-radius:10px;background:var(--card2);${on?'':'opacity:.45;filter:grayscale(1)'}"><span style="font-size:24px">${i}</span><div style="min-width:0"><div class="b sm">${t}</div><div class="xs mut">${d}</div></div></div>`).join('')}</div></div>`}
+  T('Fuerza','🏋️','Arranque',r.arranque,BT.arr[sx],kg,'Sube tu RM de arranque'),
+  T('Fuerza','💥','Envión',r.envion,BT.env[sx],kg,'Sube tu RM de envión'),
+  T('Fuerza','🔱','Total',tot,BT.tot[sx],kg,'Arranque + envión'),
+  T('Fuerza','📊','Sinclair',sin,BT.sin[sx],v=>fk(Math.round(v))+' pts','Necesita peso corporal'),
+  T('Fuerza','🦵','Sentadilla trasera',r.strasera,BT.sqt[sx],kg,'Registra tu sentadilla trasera'),
+  T('Fuerza','🧱','Sentadilla frontal',r.sfrontal,BT.sqf[sx],kg,'Registra tu sentadilla frontal'),
+  T('Fuerza','🪝','Cargada',r.cargada,BT.car[sx],kg,'Registra tu cargada'),
+  T('Fuerza','🚀','Jerk',r.jerk,BT.jrk[sx],kg,'Registra tu jerk'),
+  T('Fuerza','🙌','Push press',r.pushpress,BT.pp[sx],kg,'Registra tu push press'),
+  T('Fuerza','🧲','Tirón de arranque',r.tarranque,BT.tar[sx],kg,'Registra tu tirón de arranque'),
+  T('Fuerza','⛓️','Tirón de envión',r.tenvion,BT.ten[sx],kg,'Registra tu tirón de envión'),
+  T('Fuerza','🪶','Arranque vs. tu peso',r.arranque&&a.bw?r.arranque/a.bw:0,BT.arrbw[sx],x,'Arranque dividido por tu peso corporal'),
+  T('Fuerza','⚖️','Envión vs. tu peso',r.envion&&a.bw?r.envion/a.bw:0,BT.envbw[sx],x,'Envión dividido por tu peso corporal'),
+  T('Fuerza','🐘','Sentadilla vs. tu peso',r.strasera&&a.bw?r.strasera/a.bw:0,BT.sqbw[sx],x,'Sentadilla trasera dividida por tu peso'),
+  T('Constancia','🔥','Racha',streak,[2,4,8,12,26,52],n('semanas'),'Semanas seguidas entrenando'),
+  T('Constancia','📅','Asistencia',ac,[4,8,12,16,18,20],n('clases'),'Clases en las últimas 4 semanas'),
+  T('Constancia','📝','Entrenos registrados',logs.length,[10,25,50,100,200,365],n('entrenos'),'Registra tus entrenamientos'),
+  T('Constancia','✅','Plani completa',fullPlans,[1,3,6,10,20,40],n('planis'),'Todas las sesiones de una plani'),
+  T('Constancia','⚡','Récords',hist.length,[3,10,20,40,75,150],n('RM'),'Cada RM nuevo suma'),
+  T('Constancia','💬','Sensaciones',wells,[5,20,50,100,200,365],n('días'),'Cuéntale al profe cómo llegas'),
+  T('Constancia','🎥','Técnica en video',vids,[1,5,15,30,60,100],n('videos'),'Sube videos para el profe'),
+  T('Competencia','🏆','Competidor',res.length,[1,3,5,10,20,30],n('competencias'),'Compite'),
+  T('Competencia','🥇','Podios',pods,[1,3,5,10,20,30],n('podios'),'Sube al podio'),
+  T('Competencia','👑','Campeón',golds,[1,2,3,5,10,20],n('oros'),'Gana una competencia'),
+  O('Competencia','🎯','Perfecto 6/6',perfect,'6 intentos válidos en una competencia','Los 6 intentos válidos'),
+  O('Especiales','🌅','Mañanero',att.filter(s=>s.time<'12:00').length>=5,'5 clases de la mañana','5 clases antes de las 12:00'),
+  O('Especiales','🌙','Nocturno',att.filter(s=>s.time>='19:00').length>=5,'5 clases de las 19:00','5 clases de las 19:00'),
+  O('Especiales','⚡⚡','Doble récord',Object.values(byDay).some(v=>v>=2),'2 RM el mismo día','Saca 2 RM el mismo día'),
+  O('Especiales','🎂','Cumpleañero',trainedBday,'Entrenaste en tu cumpleaños','Entrena el día de tu cumpleaños'),
+  O('Especiales','⚙️','Técnica balanceada',ratio>=0.78&&ratio<=0.84,'Arranque entre 78% y 84% del envión','Arranque = 78–84% del envión'),
+  O('Especiales','💳','Al día',alDia,'3 meses de mensualidad pagada','Paga 3 meses seguidos'),
+  O('Especiales','🏋️‍♂️','Club del peso corporal',r.envion&&a.bw&&r.envion>=a.bw*(sx==='F'?1.25:1.5)&&r.arranque>=a.bw*(sx==='F'?1:1.2),sx==='F'?'Arranque 1× y envión 1,25× tu peso':'Arranque 1,2× y envión 1,5× tu peso',sx==='F'?'Arranque 1× y envión 1,25× tu peso':'Arranque 1,2× y envión 1,5× tu peso'),
+  O('Especiales','🪨','Doble peso corporal',r.strasera&&a.bw&&r.strasera>=a.bw*2,'Sentadilla trasera 2× tu peso','Sentadilla trasera 2× tu peso'),
+  O('Especiales','🦍','Club 300',sx==='F'?tot>=200:tot>=300,sx==='F'?'200 kg de total':'300 kg de total',sx==='F'?'Total de 200 kg':'Total de 300 kg'),
+  O('Especiales','🌋','Monstruo',sx==='F'?(r.strasera||0)>=200:(r.strasera||0)>=250,sx==='F'?'Sentadilla de 200 kg':'Sentadilla de 250 kg',sx==='F'?'Sentadilla trasera de 200 kg':'Sentadilla trasera de 250 kg'),
+  O('Especiales','🪪','Perfil completo',a.sex&&a.bw&&a.dob&&r.arranque&&r.envion,'Peso, fecha y RM completos','Completa peso, fecha y RM')]}
+function badgeLevel(b){if(b.one)return b.on?1:0;return b.th.filter(v=>b.val>=v).length}
+function badgesHTML(id){const B=badges(id);const a=S.athletes[id]||{};const got=B.reduce((n,b)=>n+badgeLevel(b),0);const max=B.reduce((n,b)=>n+(b.one?1:b.th.length),0);
+ const open=S.bdgOpen===id;const groups=['Fuerza','Constancia','Competencia','Especiales'];
+ const card=b=>{const l=badgeLevel(b);if(b.one)return`<div class="bdg ${b.on?'':'off'}"><span class="bi">${b.i}</span><div class="f1" style="min-width:0"><div class="b sm">${b.t}${b.on?' ✓':''}</div><div class="xs mut">${b.on?b.d:b.hint}</div></div></div>`;
+  const nx=b.th[l];const prev=l?b.th[l-1]:0;const pc=nx?Math.max(4,Math.min(100,Math.round((b.val-prev)/(nx-prev)*100))):100;const lv=l?LV[l-1]:null;
+  return`<div class="bdg ${l?'':'off'}" style="${lv?'--lc:'+lv[2]:''}"><span class="bi">${b.i}</span><div class="f1" style="min-width:0"><div class="b sm">${b.t} ${lv?lv[0]:''}</div><div class="xs mut">${b.val?b.f(b.val):'—'}${nx?' · próximo '+b.f(nx):' · ¡nivel máximo!'}</div><div class="bbar"><i style="width:${pc}%"></i></div></div></div>`};
+ let h=`<div class="card cc" style="--cc:#ffcf1f"><div class="row sp"><h3>Logros</h3><span class="pill">${got}/${max}</span></div><div class="xs mut" style="margin-bottom:8px">🥉 Bronce · 🥈 Plata · 🥇 Oro · 💎 Diamante · 🔥 Élite · 👑 Leyenda${a.sex?' · metas de fuerza para '+(a.sex==='F'?'mujeres':'hombres'):' · completa tu sexo en el perfil para ver tus metas'}</div>`;
+ groups.forEach((g,gi)=>{if(gi>0&&!open)return;const L=B.filter(b=>b.g===g);h+=`<div class="sec-t" style="margin-top:${gi?12:4}px">${g}</div><div class="grid2" style="gap:8px">${L.map(card).join('')}</div>`});
+ return h+`<button class="btn sm ghost full" style="margin-top:10px" onclick="S.bdgOpen=S.bdgOpen==='${id}'?null:'${id}';render()">${open?'Ver menos':'Ver todos los logros (constancia, competencia y especiales)'}</button></div>`}
 function compHistHTML(id){const L=Object.entries(S.comps).map(([cid,c])=>[c,(c.results||{})[id]]).filter(x=>x[1]).sort((a,b)=>b[0].date.localeCompare(a[0].date));if(!L.length)return'';
  return`<div class="card cc" style="--cc:#ec4899"><h3>Competencias</h3>${L.map(([c,r])=>`<div class="li"><span style="font-size:22px">${medal(r.place)}</span><div class="f1"><div class="b">${esc(c.name)}</div><div class="xs mut">${fmtD(c.date,{day:'numeric',month:'short',year:'numeric'})}${r.cat?' · '+esc(r.cat):''}${r.place?' · '+r.place+'° lugar':''}</div></div><div class="b">${compTot(r)?fk(compBest(r,'sn'))+'/'+fk(compBest(r,'cj'))+' = '+fk(compTot(r)):'inscrito'}</div></div>`).join('')}</div>`}
 
