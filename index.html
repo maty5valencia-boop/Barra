@@ -182,6 +182,9 @@ header.top{background:var(--hdr)}nav.bottom{background:var(--navbg)}
 .bdg.off{opacity:.5;filter:grayscale(1)}
 .bdg .bi{font-size:22px;line-height:1;flex:none;margin-top:2px}
 .bdg .bbar{height:4px;border-radius:9px;background:var(--line);margin-top:5px;overflow:hidden}.bdg .bbar i{display:block;height:100%;background:var(--lc,var(--mut));border-radius:9px}
+#barlab{position:fixed;inset:0;z-index:300;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+.bl-top{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--hdr);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+.bl-body{max-width:560px;margin:0 auto;padding:12px}
 /* entrada */
 .who2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .who2 button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 10px;border-radius:14px;border:1px solid var(--line);background:var(--card2);color:var(--tx);font:600 15px Barlow;cursor:pointer}
@@ -442,7 +445,7 @@ function vProfile(id,coachMode){const a=S.athletes[id];if(!a)return'';const step
  const total=(a.rms?.arranque||0)+(a.rms?.envion||0);const sc=sinclair(total,a.bw,a.sex);const ci=catInfo(a);
  let h=`<div class="card cc" style="--cc:#ff5a1f"><div class="row sp" style="align-items:flex-start"><div class="row"><div class="av" style="width:48px;height:48px;font-size:20px">${esc(initials(a.name))}</div><div><h2 style="margin:0">${esc(a.name)}</h2><div class="mut sm">${a.sex==='F'?'Femenino':a.sex==='M'?'Masculino':''}${ageOf(a)!=null?' · '+ageOf(a)+' años':''}${a.dob?' · '+fmtD(a.dob,{day:'numeric',month:'short',year:'numeric'}):''}${isBday(a)?' 🎂':''} · ${ageGroup(a.by)}</div></div></div><button class="btn sm sec" onclick="A.editProfile('${id}')">Editar</button></div>
  <div class="grid3" style="margin-top:12px"><div class="stat"><div class="l">Peso</div><div class="v">${fk(a.bw)}</div><div class="xs mut">${ci?'Cat. '+ci.label:''}</div></div><div class="stat"><div class="l">Total</div><div class="v">${total?fk(total):'—'}</div></div><div class="stat"><div class="l">Sinclair</div><div class="v">${sc?fk(Math.round(sc*10)/10):'—'}</div></div></div></div>`;
- h+=badgesHTML(id)+compHistHTML(id);
+ h+=insightsHTML(id)+barHistHTML(id)+badgesHTML(id)+compHistHTML(id);
  h+=`<div class="card cc" style="--cc:#8b5cf6"><div class="row sp"><h3>Récords (RM)</h3><span class="xs mut">toca uno para ver %</span></div><div class="grid2">${EX.map(e=>{const pts=(a.rmHist||[]).filter(p=>p.ex===e.k).sort((x,y)=>x.d.localeCompare(y.d)).map(p=>({x:p.d,y:p.kg}));const last=pts[pts.length-1];
   return`<div class="stat lift" style="cursor:pointer;--lc:${EXC[e.k]}" onclick="A.pctTable('${id}','${e.k}')"><div class="l">${e.n}</div><div class="row sp"><div class="v">${fk(a.rms?.[e.k])}<span class="xs mut"> kg</span></div><div class="xs mut">${last?fmtD(last.x):''}</div></div>${pts.length>=2?spark(pts,{h:28,color:EXC[e.k]}):''}</div>`}).join('')}</div></div>`;
  // proyecciones
@@ -867,8 +870,8 @@ A.install=async()=>{if(installEvt){installEvt.prompt();try{await installEvt.user
 
 function vMore(){const c=role()==='coach';const ic=k=>svg(k).replace('<svg ','<svg width="22" height="22" ');
  const it=c?[['pay','Mensualidades','Link de pago y quién pagó este mes','#2ecc71'],['cal','Agenda','Horarios, reservas y competencias','#3b82f6'],['tools','Herramientas','% del RM, discos, intentos, Sinclair','#f59e0b'],['shop','Halteros Foods','Pedidos y productos','#ffcf1f']]
-  :[['profile','Mi perfil','Tus marcas, peso, objetivos e historial','#2ecc71'],['pay','Mensualidad','Paga tu mes y revisa tu estado','#10b981'],['cal','Agenda','Reserva tu hora de entrenamiento','#3b82f6'],['tools','Herramientas','% del RM, discos, intentos, Sinclair','#f59e0b'],['shop','Halteros Foods','Barritas, mantequilla de maní y más','#ffcf1f']];
- let h=`<h1>Más</h1>`+it.map(([k,t,d,col])=>`<div class="card cc row" style="--cc:${col};gap:12px;cursor:pointer" onclick="A.tab('${k}')"><div style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:${col}22;color:${col};flex:none">${k==='shop'?`<img src="${FOODIMG.logo}" style="width:42px;height:42px;border-radius:12px">`:ic(k)}</div><div class="f1"><div class="b">${t}</div><div class="sm mut">${d}</div></div><span class="mut" style="font-size:22px">›</span></div>`).join('');
+  :[['profile','Mi perfil','Tus marcas, peso, objetivos e historial','#2ecc71'],['bar','Análisis de la barra','Sube un video: trayectoria, velocidad y potencia','#e3262e'],['pay','Mensualidad','Paga tu mes y revisa tu estado','#10b981'],['cal','Agenda','Reserva tu hora de entrenamiento','#3b82f6'],['tools','Herramientas','% del RM, discos, intentos, Sinclair','#f59e0b'],['shop','Halteros Foods','Barritas, mantequilla de maní y más','#ffcf1f']];
+ let h=`<h1>Más</h1>`+it.map(([k,t,d,col])=>`<div class="card cc row" style="--cc:${col};gap:12px;cursor:pointer" onclick="${k==='bar'?'A.barOpen()':`A.tab('${k}')`}"><div style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:${col}22;color:${col};flex:none">${k==='shop'?`<img src="${FOODIMG.logo}" style="width:42px;height:42px;border-radius:12px">`:k==='bar'?'<span style="font-size:22px">🎥</span>':ic(k)}</div><div class="f1"><div class="b">${t}</div><div class="sm mut">${d}</div></div><span class="mut" style="font-size:22px">›</span></div>`).join('');
  if(c)h+=`<div class="card cc row" style="--cc:#22c55e;gap:12px;cursor:pointer" onclick="A.exportXlsx()"><div style="font-size:28px">📊</div><div class="f1"><div class="b">Exportar a Excel</div><div class="sm mut">Atletas y RM, mensualidades, asistencia y competencias.</div></div><span class="btn sm sec">Descargar</span></div>`;
  if(!isStandalone())h+=`<div class="card cc row" style="--cc:#ff5a1f;gap:12px;cursor:pointer" onclick="A.install()"><div style="font-size:28px">📲</div><div class="f1"><div class="b">Instalar la app</div><div class="sm mut">Déjala en tu pantalla de inicio, como una app normal.</div></div><span class="btn sm">Instalar</span></div>`;
  h+=`<div class="card"><div class="row sp"><div><div class="b">${esc(S.me.name)}</div><div class="sm mut">${c?'Profe':'Atleta'}${!c&&S.me.coachName?' · Profe '+esc(S.me.coachName):''}</div></div><div class="row" style="gap:6px"><button class="btn sm sec" onclick="A.theme()">🎨 Diseño</button><button class="btn sm ghost" onclick="A.logout()">Salir</button></div></div></div>`;
@@ -941,6 +944,115 @@ A.copyReminder=()=>{const m=S.payMonth||curMonth();copyTxt(payReminderTxt(null,m
 A.payPlanEdit=id=>{const a=S.athletes[id];if(!a)return;openModal({t:'payPlan',v:{id,plan:a.fee?'__fee':(a.plan||''),fee:a.fee||'',phone:a.phone||''}})};
 A.savePayPlan=async()=>{const v=S.modal.v;const a=clone(S.athletes[v.id]);if(!a)return;delete a.plan;delete a.fee;if(v.plan==='__fee'){const f=+String(v.fee).replace(/\D/g,'');if(!f)return toast('Escribe el monto');a.fee=f}else if(v.plan)a.plan=v.plan;a.phone=v.phone||null;if(await put('athletes/'+v.id,a)){closeModal();toast('Guardado')}};
 
+/* ===================== análisis de la barra (video) ===================== */
+const BL={};const BLEX=[['arranque','Arranque'],['envion','Envión'],['cargada','Cargada'],['sfrontal','Sent. frontal'],['strasera','Sent. trasera'],['otro','Otro']];
+function blEl(){let e=document.getElementById('barlab');if(!e){e=document.createElement('div');e.id='barlab';document.body.appendChild(e)}return e}
+A.barOpen=u=>{Object.assign(BL,{u:u||S.me.id,step:1,ex:BL.ex||'arranque',kg:'',disc:BL.disc||45,slow:1,face:BL.face||1,taps:[],res:null,busy:false});document.body.style.overflow='hidden';blRender()};
+A.barClose=()=>{const e=document.getElementById('barlab');if(e)e.remove();document.body.style.overflow='';if(BL.url)URL.revokeObjectURL(BL.url);BL.url=null;BL.v=null;BL.busy=false};
+A.barSet=(k,v)=>{BL[k]=v;blRender()};
+function blRender(){const e=blEl();const a=S.athletes[BL.u]||{};let h=`<div class="bl-top"><button class="btn sm ghost" onclick="${BL.step>1&&!BL.busy?'A.barBack()':'A.barClose()'}">‹ ${BL.step>1?'Atrás':'Cerrar'}</button><b>🎥 Análisis de la barra</b><span style="width:60px"></span></div><div class="bl-body">`;
+ if(BL.step===1){h+=`<div class="card"><div class="sm mut">${esc(a.name||'')}</div><label>Ejercicio</label><div class="tabs">${BLEX.map(([k,n])=>`<button class="${BL.ex===k?'on':''}" onclick="A.barSet('ex','${k}')">${n}</button>`).join('')}</div>
+  <div class="grid2"><div><label>Kilos en la barra</label><input id="blkg" type="number" inputmode="decimal" value="${esc(BL.kg)}" oninput="BL.kg=this.value" placeholder="Ej: 80"></div><div><label>Disco que se ve</label><select onchange="BL.disc=+this.value">${[[45,'Olímpico 45 cm'],[40,'40 cm'],[35,'35 cm'],[25,'Técnico 25 cm']].map(([v,n])=>`<option value="${v}" ${BL.disc===v?'selected':''}>${n}</option>`).join('')}</select></div></div>
+  <label>Tipo de video</label><div class="seg">${[[1,'Normal'],[4,'Cámara lenta ×4'],[8,'Lenta ×8']].map(([v,n])=>`<button class="${BL.slow===v?'on':''}" onclick="A.barSet('slow',${v})">${n}</button>`).join('')}</div>
+  <label class="btn full" style="margin-top:14px;text-align:center;display:block;cursor:pointer">🎥 Elegir video<input type="file" accept="video/*" style="display:none" onchange="A.barFile(this.files[0])"></label></div>
+  <div class="card"><div class="sec-t">Para que el análisis sea bueno</div><ol class="sm" style="padding-left:18px;line-height:1.6;margin:0"><li>Graba <b>de lado</b>, con el celular <b>quieto</b> (apoyado o en trípode).</li><li>Que se vea el <b>disco completo</b> durante todo el levantamiento.</li><li>Cámara a la altura de la cadera, a unos 3–4 metros.</li><li>Recorta el video para que parta justo antes del levantamiento.</li></ol><div class="xs mut" style="margin-top:8px">El video no se sube a ningún lado: se analiza en tu celular. Los resultados son estimaciones.</div></div>`}
+ else if(BL.step===2){const n=BL.taps.length;h+=`<div class="card" style="padding:10px"><div class="b" style="margin-bottom:6px">${n===0?'1. Toca el <span style="color:#e3262e">centro del disco</span>':n===1?'2. Ahora toca el <span style="color:#1f5fd6">borde del disco</span>':'✓ Disco marcado'}</div><div class="xs mut" style="margin-bottom:8px">Primero mueve el video hasta justo antes de que la barra despegue.</div>
+  <div style="position:relative"><canvas id="blc" style="width:100%;border-radius:10px;background:#000;touch-action:none"></canvas></div>
+  <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm sec" onclick="A.barStep(-1)">◀</button><input id="blt" type="range" min="0" max="${BL.v.duration}" step="0.01" value="${BL.t0||0}" style="flex:1" oninput="A.barSeek(+this.value)"><button class="btn sm sec" onclick="A.barStep(1)">▶</button></div>
+  <div class="xs mut" style="text-align:center">${(BL.t0||0).toFixed(2)} s de ${BL.v.duration.toFixed(1)} s</div>
+  <label>El atleta mira hacia</label><div class="seg"><button class="${BL.face===-1?'on':''}" onclick="BL.face=-1;blRender()">⬅ Izquierda</button><button class="${BL.face===1?'on':''}" onclick="BL.face=1;blRender()">Derecha ➡</button></div>
+  <div class="row" style="gap:8px;margin-top:12px">${n?`<button class="btn ghost" onclick="BL.taps=[];blRender()">Rehacer</button>`:''}<button class="btn f1" ${n<2?'disabled':''} onclick="A.barRun()">Analizar ▶</button></div></div>`}
+ else if(BL.step===3){h+=`<div class="card" style="text-align:center"><div class="b">Siguiendo la barra…</div><div class="prog" style="margin:12px 0"><i id="blp" style="width:0%"></i></div><canvas id="blc" style="width:100%;border-radius:10px;background:#000"></canvas><div class="xs mut" id="blpt">Cuadro 0</div></div>`}
+ else if(BL.step===4)h+=blResult();
+ e.innerHTML=h+'</div>';
+ if(BL.step===2){blDraw();const c=$('#blc');c.onclick=ev=>{if(BL.taps.length>=2)return;const r=c.getBoundingClientRect();BL.taps.push([(ev.clientX-r.left)*c.width/r.width,(ev.clientY-r.top)*c.height/r.height]);blRender()}}
+ if(BL.step===4)blDrawResult()}
+A.barBack=()=>{if(BL.step===4){BL.step=2;BL.res=null;blRender();A.barSeek(BL.t0||0)}else if(BL.step===2){BL.step=1;blRender()}};
+A.barFile=f=>{if(!f)return;if(BL.url)URL.revokeObjectURL(BL.url);BL.url=URL.createObjectURL(f);const v=document.createElement('video');v.muted=true;v.playsInline=true;v.preload='auto';v.src=BL.url;
+ v.onloadeddata=async()=>{BL.v=v;BL.W=360;BL.H=Math.round(v.videoHeight*360/v.videoWidth);BL.t0=0;BL.taps=[];BL.step=2;blRender();await blSeek(0.001);blDraw()};
+ v.onerror=()=>toast('No se pudo abrir el video. Prueba con otro formato (MP4).');v.load()};
+function blSeek(t){const v=BL.v;return new Promise(res=>{let done=false;const fin=()=>{if(done)return;done=true;v.removeEventListener('seeked',fin);res()};v.addEventListener('seeked',fin);v.currentTime=Math.max(0,Math.min(t,v.duration-0.001));setTimeout(fin,1500)})}
+A.barSeek=async t=>{BL.t0=t;await blSeek(t);blDraw();const l=document.querySelector('.bl-body .xs.mut[style*="center"]');if(l)l.textContent=t.toFixed(2)+' s de '+BL.v.duration.toFixed(1)+' s'};
+A.barStep=d=>{const t=Math.max(0,Math.min(BL.v.duration,(BL.t0||0)+d/30));const r=$('#blt');if(r)r.value=t;A.barSeek(t)};
+function blDraw(){const c=$('#blc');if(!c||!BL.v)return;c.width=BL.W;c.height=BL.H;const x=c.getContext('2d');x.drawImage(BL.v,0,0,BL.W,BL.H);
+ if(BL.taps[0]){const[cx,cy]=BL.taps[0];x.fillStyle='#e3262e';x.beginPath();x.arc(cx,cy,4,0,7);x.fill();if(BL.taps[1]){const R=Math.hypot(BL.taps[1][0]-cx,BL.taps[1][1]-cy);x.strokeStyle='#1f5fd6';x.lineWidth=2;x.beginPath();x.arc(cx,cy,R,0,7);x.stroke()}}}
+// --- seguimiento por coincidencia de plantilla (template matching) ---
+function blGray(ctx,w,h){const d=ctx.getImageData(0,0,w,h).data;const g=new Float32Array(w*h);for(let i=0,j=0;i<g.length;i++,j+=4)g[i]=d[j]*.299+d[j+1]*.587+d[j+2]*.114;return g}
+function blPatch(g,w,h,cx,cy,r){const n=2*r+1,p=new Float32Array(n*n);for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){const X=Math.min(w-1,Math.max(0,Math.round(cx+x))),Y=Math.min(h-1,Math.max(0,Math.round(cy+y)));p[(y+r)*n+x+r]=g[Y*w+X]}return p}
+function blMatch(g,w,h,tpl,r,px,py,sr){let best=1e18,bx=px,by=py;const n=2*r+1,S=new Map();
+ for(let dy=-sr;dy<=sr;dy++)for(let dx=-sr;dx<=sr;dx++){const cx=Math.round(px)+dx,cy=Math.round(py)+dy;if(cx-r<0||cy-r<0||cx+r>=w||cy+r>=h)continue;let s=0;
+  for(let y=-r;y<=r;y+=1){const row=(cy+y)*w,tr=(y+r)*n+r;for(let x=-r;x<=r;x+=1){const d=g[row+cx+x]-tpl[tr+x];s+=d*d}if(s>best)break}
+  S.set(dx+','+dy,s);if(s<best){best=s;bx=cx;by=cy}}
+ // refinamiento subpíxel (parábola)
+ const f=(dx,dy)=>S.get((bx-Math.round(px)+dx)+','+(by-Math.round(py)+dy));const l=f(-1,0),rr=f(1,0),u=f(0,-1),d=f(0,1);let ox=0,oy=0;
+ if(l!=null&&rr!=null){const q=l-2*best+rr;if(q>0)ox=Math.max(-.5,Math.min(.5,(l-rr)/(2*q)))}if(u!=null&&d!=null){const q=u-2*best+d;if(q>0)oy=Math.max(-.5,Math.min(.5,(u-d)/(2*q)))}
+ return{x:bx+ox,y:by+oy,s:best/(n*n)}}
+A.barRun=async()=>{if(BL.busy)return;BL.busy=true;BL.step=3;blRender();const v=BL.v;const[cx,cy]=BL.taps[0];const Rw=Math.max(4,Math.hypot(BL.taps[1][0]-cx,BL.taps[1][1]-cy));
+ const k=Math.min(1,14/Rw);const tw=Math.max(80,Math.round(BL.W*k)),th=Math.round(BL.H*tw/BL.W);const sc=tw/BL.W;const R=Math.max(5,Math.round(Rw*sc));
+ const cv=document.createElement('canvas');cv.width=tw;cv.height=th;const cx2=cv.getContext('2d',{willReadFrequently:true});
+ const prev=$('#blc');if(prev){prev.width=BL.W;prev.height=BL.H}const pctx=prev&&prev.getContext('2d');
+ const dtv=1/30;const maxT=Math.min(v.duration,BL.t0+Math.min(8*BL.slow,v.duration));const N=Math.max(2,Math.floor((maxT-BL.t0)/dtv));
+ await blSeek(BL.t0);cx2.drawImage(v,0,0,tw,th);let g=blGray(cx2,tw,th);
+ // primer cuadro guardado para dibujar la trayectoria
+ const first=document.createElement('canvas');first.width=BL.W;first.height=BL.H;first.getContext('2d').drawImage(v,0,0,BL.W,BL.H);BL.first=first;
+ let p={x:cx*sc,y:cy*sc},vel={x:0,y:0};let tpl=blPatch(g,tw,th,p.x,p.y,R);const tpl0=tpl.slice();const pts=[{t:0,x:p.x,y:p.y}];const sc0=[];
+ for(let i=1;i<=N;i++){if(!BL.busy)return;await blSeek(BL.t0+i*dtv);cx2.drawImage(v,0,0,tw,th);g=blGray(cx2,tw,th);
+  const sr=Math.round(Math.min(R*1.6,R*0.6+Math.hypot(vel.x,vel.y)*0.8+4));const m=blMatch(g,tw,th,tpl,R,p.x+vel.x,p.y+vel.y,sr);
+  if(sc0.length<5)sc0.push(m.s);const base=sc0.slice().sort((a,b)=>a-b)[Math.floor(sc0.length/2)]||1;if(i>5&&m.s>base*8+400){break}
+  vel={x:m.x-p.x,y:m.y-p.y};p={x:m.x,y:m.y};pts.push({t:i*dtv/BL.slow,x:p.x,y:p.y});
+  const np=blPatch(g,tw,th,p.x,p.y,R);for(let j=0;j<tpl.length;j++)tpl[j]=tpl[j]*.8+np[j]*.1+tpl0[j]*.1;
+  if(i%3===0){const b=$('#blp');if(b)b.style.width=Math.round(i/N*100)+'%';const tt=$('#blpt');if(tt)tt.textContent='Cuadro '+i+' de '+N;if(pctx){pctx.drawImage(v,0,0,BL.W,BL.H);pctx.strokeStyle='#ffcf1f';pctx.lineWidth=3;pctx.beginPath();pts.forEach((q,j)=>j?pctx.lineTo(q.x/sc,q.y/sc):pctx.moveTo(q.x/sc,q.y/sc));pctx.stroke()}await new Promise(r=>setTimeout(r,0))}}
+ BL.busy=false;if(pts.length<8){BL.step=2;blRender();return toast('No pude seguir el disco. Prueba marcando de nuevo o con un video más estable.')}
+ BL.res=blMetrics(pts,R/((BL.disc/100)/2),sc);BL.step=4;blRender()};
+function blSmooth(a,k){return a.map((_,i)=>{let s=0,n=0;for(let j=i-k;j<=i+k;j++)if(a[j]!=null){s+=a[j];n++}return s/n})}
+function blMetrics(pts,ppm,sc){const t=pts.map(p=>p.t);const x0=pts[0].x,y0=pts[0].y;let X=pts.map(p=>BL.face*(p.x-x0)/ppm),Y=pts.map(p=>(y0-p.y)/ppm);X=blSmooth(X,1);Y=blSmooth(Y,1);
+ const n=Y.length;const vy=Y.map((_,i)=>{const a=Math.max(0,i-1),b=Math.min(n-1,i+1);return(Y[b]-Y[a])/((t[b]-t[a])||1)});const vys=blSmooth(vy,1);
+ const ay=vys.map((_,i)=>{const a=Math.max(0,i-1),b=Math.min(n-1,i+1);return(vys[b]-vys[a])/((t[b]-t[a])||1)});
+ let iH=Y.indexOf(Math.max(...Y));{let pk=0;for(let i=1;i<n;i++){if(Y[i]>Y[pk])pk=i;else if(Y[pk]>0.1&&Y[i]<Y[pk]-0.03){iH=pk;break}}}const hmax=Y[iH];const pull=vys.slice(0,iH+1);const vmax=Math.max(0,...pull);const iV=pull.indexOf(vmax);
+ let iC=iH;for(let i=iH+1;i<n-1;i++){if(Y[i]<=Y[i-1]&&Y[i]<=Y[i+1]){iC=i;break}if(i===n-2)iC=n-1}
+ const xs=X.slice(0,iH+1);const toward=Math.min(0,...xs),away=Math.max(0,...xs);
+ const m=+String(BL.kg).replace(',','.')||0;const P=vys.map((v,i)=>m*(9.81+ay[i])*v);const pmax=m?Math.max(0,...P.slice(0,iH+1)):0;const fmax=m?Math.max(...ay.slice(0,iH+1).map(a=>m*(9.81+a))):0;
+ // sentadilla: fase concéntrica desde el punto más bajo
+ let vconc=null;if(BL.ex==='sfrontal'||BL.ex==='strasera'){const iL=Y.indexOf(Math.min(...Y));let iT=iL;for(let i=iL;i<n;i++)if(Y[i]>=Y[iT])iT=i;if(iT>iL+1){vconc=(Y[iT]-Y[iL])/(t[iT]-t[iL])}}
+ return{t,X,Y,vy:vys,iH,iV,iC,hmax,vmax,tPeak:t[iV],drop:hmax-Y[iC],toward,away,catchX:X[iC],pmax,fmax,vconc,m}}
+function blTips(r){const T=[];const ex=BL.ex;const a=S.athletes[BL.u]||{};const rm=a.rms&&a.rms[ex];const pc=r.m&&rm?Math.round(r.m/rm*100):null;
+ if(ex==='arranque'){if(r.vmax<1.5)T.push(['⚡','Velocidad baja ('+r.vmax.toFixed(2)+' m/s)','En el arranque la barra suele pasar 1,6–2,1 m/s. Trabaja la extensión explosiva del segundo tirón (arranque colgado, tirones rápidos).']);else T.push(['✅','Buena velocidad','Pico de '+r.vmax.toFixed(2)+' m/s, dentro de lo esperado para el arranque.'])}
+ if(ex==='envion'||ex==='cargada'){if(r.vmax<1.2)T.push(['⚡','Velocidad baja ('+r.vmax.toFixed(2)+' m/s)','En la cargada la barra suele pasar 1,2–1,7 m/s. Busca más explosividad al final del tirón (cargada colgado, tirón de envión).']);else T.push(['✅','Buena velocidad','Pico de '+r.vmax.toFixed(2)+' m/s en el tirón.'])}
+ if(ex==='arranque'||ex==='envion'||ex==='cargada'){
+  if(r.away>0.08)T.push(['↗️','La barra se aleja '+Math.round(r.away*100)+' cm','Durante el tirón la barra se va hacia adelante. Mantenla pegada al cuerpo: dorsales activos y barra a la cadera.']);
+  if(r.toward<-0.12)T.push(['↙️','La barra viene mucho hacia ti ('+Math.round(-r.toward*100)+' cm)','Puede ser exceso de golpe de cadera o inclinarte hacia atrás. Busca un tirón más vertical.']);
+  if(r.catchX>0.08)T.push(['⚠️','Recibes adelante ('+Math.round(r.catchX*100)+' cm)','La barra termina por delante de donde partió: es la causa típica de perder el levantamiento hacia adelante.']);
+  else if(r.catchX<-0.12)T.push(['⚠️','Recibes muy atrás ('+Math.round(-r.catchX*100)+' cm)','La barra termina detrás del punto de partida. Revisa no saltar hacia atrás.']);
+  else T.push(['🎯','Buena recepción','La barra termina cerca de su línea de partida ('+(r.catchX>=0?'+':'')+Math.round(r.catchX*100)+' cm).'])}
+ if(r.vconc!=null){const v=r.vconc;const z=v>1.3?'velocidad pura':v>1?'velocidad-fuerza':v>.75?'fuerza-velocidad':v>.5?'fuerza':'fuerza máxima';T.push(['📊','Velocidad media de subida: '+v.toFixed(2)+' m/s','Zona de '+z+'. '+(v<.35?'Muy cerca de tu máximo.':v<.5?'Peso muy pesado para ti hoy.':'')])}
+ if(pc)T.push(['🏋️',pc+'% de tu RM','Con '+fk(r.m)+' kg sobre tu RM de '+fk(rm)+' kg.']);
+ return T}
+function blResult(){const r=BL.res;const T=blTips(r);
+ return`<div class="card" style="padding:10px"><canvas id="blr" style="width:100%;border-radius:10px;background:#000"></canvas><div class="xs mut" style="margin-top:4px">Trayectoria: 🔵 lenta → 🔴 rápida · ● punto más alto</div></div>
+ <div class="grid2" style="gap:8px;margin-bottom:12px"><div class="stat"><div class="l">Velocidad máx.</div><div class="v">${r.vmax.toFixed(2)}<span class="sm"> m/s</span></div></div><div class="stat"><div class="l">Altura máx.</div><div class="v">${Math.round(r.hmax*100)}<span class="sm"> cm</span></div></div>
+ ${r.pmax?`<div class="stat"><div class="l">Potencia pico</div><div class="v">${fk(Math.round(r.pmax))}<span class="sm"> W</span></div></div><div class="stat"><div class="l">Fuerza pico</div><div class="v">${fk(Math.round(r.fmax))}<span class="sm"> N</span></div></div>`:''}
+ <div class="stat"><div class="l">Se acerca / se aleja</div><div class="v" style="font-size:20px">${Math.round(-r.toward*100)} / ${Math.round(r.away*100)}<span class="sm"> cm</span></div></div><div class="stat"><div class="l">Caída a la recepción</div><div class="v" style="font-size:20px">${Math.round(r.drop*100)}<span class="sm"> cm</span></div></div></div>
+ <div class="card"><div class="sec-t">Velocidad vertical</div>${blChart(r)}</div>
+ <div class="card"><div class="sec-t">Qué dice tu levantamiento</div>${T.map(([i,t,d])=>`<div class="li" style="align-items:flex-start"><span style="font-size:20px">${i}</span><div><div class="b">${t}</div><div class="sm mut">${d}</div></div></div>`).join('')}${r.pmax?'':'<div class="xs mut">Escribe los kilos para calcular potencia y fuerza.</div>'}<div class="xs mut" style="margin-top:6px">Estimaciones a partir del video (≈30 cuadros por segundo). Sirven para comparar tus levantamientos entre sí.</div></div>
+ <div class="row" style="gap:8px;margin-bottom:30px"><button class="btn f1" onclick="A.barSave()">💾 Guardar en el perfil</button><button class="btn ghost" onclick="A.barBack()">Rehacer</button></div>`}
+function blChart(r){const W=320,H=120,t=r.t,v=r.vy;const T=t[t.length-1]||1;const mx=Math.max(.5,...v),mn=Math.min(-.5,...v);const X=i=>t[i]/T*W,Y=y=>H-(y-mn)/(mx-mn)*(H-16);
+ return`<svg viewBox="0 0 ${W} ${H+14}" style="width:100%"><line x1="0" x2="${W}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)"/><polyline fill="none" stroke="#e3262e" stroke-width="2.5" points="${v.map((y,i)=>X(i).toFixed(1)+','+Y(y).toFixed(1)).join(' ')}"/><circle cx="${X(r.iV)}" cy="${Y(r.vmax)}" r="4" fill="#1f5fd6"/><text x="${Math.min(W-60,X(r.iV)+6)}" y="${Math.max(11,Y(r.vmax)-4)}" font-size="11" fill="var(--tx)">${r.vmax.toFixed(2)} m/s</text><text x="0" y="${H+12}" font-size="10" fill="var(--mut)">0 s</text><text x="${W-30}" y="${H+12}" font-size="10" fill="var(--mut)">${T.toFixed(1)} s</text></svg>`}
+function blDrawResult(){const c=$('#blr');if(!c||!BL.first)return;const r=BL.res;c.width=BL.W;c.height=BL.H;const x=c.getContext('2d');x.drawImage(BL.first,0,0);x.fillStyle='rgba(0,0,0,.25)';x.fillRect(0,0,BL.W,BL.H);
+ const[cx,cy]=BL.taps[0];const R=Math.hypot(BL.taps[1][0]-cx,BL.taps[1][1]-cy);const ppw=R/((BL.disc/100)/2);const vm=Math.max(.1,...r.vy.map(Math.abs));
+ const P=i=>[cx+BL.face*r.X[i]*ppw,cy-r.Y[i]*ppw];x.lineWidth=4;x.lineCap='round';
+ for(let i=1;i<r.X.length;i++){const f=Math.min(1,Math.abs(r.vy[i])/vm);x.strokeStyle=`rgb(${Math.round(40+215*f)},${Math.round(110-60*f)},${Math.round(255-215*f)})`;x.beginPath();x.moveTo(...P(i-1));x.lineTo(...P(i));x.stroke()}
+ x.strokeStyle='rgba(255,255,255,.5)';x.setLineDash([4,4]);x.lineWidth=1;x.beginPath();x.moveTo(cx,cy);x.lineTo(cx,cy-r.hmax*ppw-10);x.stroke();x.setLineDash([]);
+ const[hx,hy]=P(r.iH);x.fillStyle='#ffcf1f';x.beginPath();x.arc(hx,hy,6,0,7);x.fill()}
+A.barSave=async()=>{const r=BL.res;const a=clone(S.athletes[BL.u]);if(!a)return toast('Primero crea el perfil');const step=Math.max(1,Math.ceil(r.X.length/60));
+ const e={id:uid(),d:ymd(),ex:BL.ex,kg:+String(BL.kg).replace(',','.')||null,vmax:+r.vmax.toFixed(2),hmax:Math.round(r.hmax*100),pmax:Math.round(r.pmax)||null,toward:Math.round(-r.toward*100),away:Math.round(r.away*100),catchX:Math.round(r.catchX*100),vconc:r.vconc!=null?+r.vconc.toFixed(2):null,path:r.X.filter((_,i)=>i%step===0).map((x,j)=>[Math.round(x*100),Math.round(r.Y[j*step]*100)])};
+ a.barAn=[e,...(a.barAn||[])].slice(0,30);if(await put('athletes/'+BL.u,a)){toast('Análisis guardado ✅');A.barClose();render()}};
+A.barDel=async(u,id)=>{const a=clone(S.athletes[u]);a.barAn=(a.barAn||[]).filter(x=>x.id!==id);if(await put('athletes/'+u,a))toast('Análisis borrado')};
+function barHistHTML(id){const a=S.athletes[id];if(!a)return'';const L=a.barAn||[];const can=id===S.me.id||role()==='coach';const nm=k=>(BLEX.find(x=>x[0]===k)||[,k])[1];
+ const mini=p=>{if(!p||p.length<2)return'';const xs=p.map(q=>q[0]),ys=p.map(q=>q[1]);const x0=Math.min(...xs,-10),x1=Math.max(...xs,10),y0=Math.min(...ys,0),y1=Math.max(...ys,10);const sx=50/Math.max(x1-x0,y1-y0),W2=60,H2=60;
+  return`<svg viewBox="0 0 ${W2} ${H2}" width="52" height="52" style="flex:none;background:var(--card2);border-radius:8px"><line x1="${(0-x0)*sx+5}" x2="${(0-x0)*sx+5}" y1="2" y2="58" stroke="var(--line)" stroke-dasharray="2 2"/><polyline fill="none" stroke="#e3262e" stroke-width="2" points="${p.map(q=>((q[0]-x0)*sx+5).toFixed(1)+','+(H2-5-(q[1]-y0)*sx).toFixed(1)).join(' ')}"/></svg>`};
+ return`<div class="card cc" style="--cc:#e3262e"><div class="row sp"><h3>🎥 Análisis de la barra</h3>${can?`<button class="btn sm" onclick="A.barOpen('${id}')">Analizar video</button>`:''}</div>
+ ${L.length?L.slice(0,8).map(e=>`<div class="li"><div style="display:flex">${mini(e.path)}</div><div class="f1" style="min-width:0"><div class="b">${nm(e.ex)}${e.kg?' · '+fk(e.kg)+' kg':''}</div><div class="xs mut">${fmtD(e.d)} · ${e.vconc!=null?'media '+e.vconc+' m/s':'pico '+e.vmax+' m/s'} · ${e.hmax} cm${e.pmax?' · '+fk(e.pmax)+' W':''}</div><div class="xs mut">↙ ${e.toward} cm · ↗ ${e.away} cm · recepción ${e.catchX>=0?'+':''}${e.catchX} cm</div></div>${can?`<button class="btn sm ghost" onclick="A.barDel('${id}','${e.id}')">✕</button>`:''}</div>`).join(''):`<div class="sm mut">Sube un video de lado y la app sigue el disco cuadro a cuadro: trayectoria, velocidad, altura, potencia y fuerza de la barra.</div>`}</div>`}
+
 /* ===================== logros ===================== */
 /* Logros por niveles: 🥉 bronce · 🥈 plata · 🥇 oro · 💎 diamante. Las metas de fuerza son distintas para hombres y mujeres. */
 const LV=[['🥉','Bronce','#cd7f32'],['🥈','Plata','#9aa3b2'],['🥇','Oro','#e6b800'],['💎','Diamante','#38bdf8'],['🔥','Élite','#ef4444'],['👑','Leyenda','#a855f7']];
@@ -1010,6 +1122,65 @@ function badges(id){const a=S.athletes[id];if(!a)return[];const t=ymd();const sx
   O('Especiales','🦍','Club 300',sx==='F'?tot>=200:tot>=300,sx==='F'?'200 kg de total':'300 kg de total',sx==='F'?'Total de 200 kg':'Total de 300 kg'),
   O('Especiales','🌋','Monstruo',sx==='F'?(r.strasera||0)>=200:(r.strasera||0)>=250,sx==='F'?'Sentadilla de 200 kg':'Sentadilla de 250 kg',sx==='F'?'Sentadilla trasera de 200 kg':'Sentadilla trasera de 250 kg'),
   O('Especiales','🪪','Perfil completo',a.sex&&a.bw&&a.dob&&r.arranque&&r.envion,'Peso, fecha y RM completos','Completa peso, fecha y RM')]}
+/* Recomendaciones automáticas: puntos fuertes, en qué trabajar y próximas metas */
+function insights(id){const a=S.athletes[id];if(!a)return null;const r=a.rms||{};const t=ymd();const sx=a.sex==='F'?'F':'M';const pc=x=>Math.round(x*100)+'%';
+ const W=[],F=[];const w=(p,i,ti,d,ej)=>W.push({p,i,ti,d,ej});
+ // datos faltantes
+ const miss=[];if(!a.bw)miss.push('peso corporal');if(!r.arranque)miss.push('arranque');if(!r.envion)miss.push('envión');if(!r.sfrontal)miss.push('sentadilla frontal');if(!r.strasera)miss.push('sentadilla trasera');
+ if(miss.length)w(miss.length>2?2:1,'📝','Completa tu perfil','Falta: '+miss.join(', ')+'. Con esos datos el análisis es mucho más preciso.',[]);
+ // técnica vs fuerza
+ if(r.arranque&&r.envion){const q=r.arranque/r.envion;
+  if(q<0.78)w(2,'🎯','Técnica de arranque','Tu arranque es el '+pc(q)+' de tu envión (lo ideal es 78–84%). Hay kilos “escondidos” en la técnica del arranque.',['Arranque colgado','Arranque desde bloques','Snatch balance','Sentadilla overhead']);
+  else if(q>0.84)w(2,'💥','Fuerza para el envión','Tu arranque es el '+pc(q)+' de tu envión (ideal 78–84%): tu envión está por debajo de lo que tu arranque permite.',['Sentadilla frontal','Cargada + sentadilla frontal','Jerk desde soportes','Tirón de envión']);
+  else F.push('Arranque y envión equilibrados ('+pc(q)+')')}
+ if(r.envion&&r.sfrontal){const q=r.envion/r.sfrontal;
+  if(q>0.9)w(2,'🧱','Sentadilla frontal','Tu envión es el '+pc(q)+' de tu sentadilla frontal: la pierna te está limitando. Si sube la frontal, sube el envión.',['Sentadilla frontal pesada (3–5 reps)','Frontal con pausa','Cargada + 2 frontales']);
+  else if(q<0.8)w(1,'⚙️','Aprovechar tu fuerza en el envión','Tienes fuerza de pierna (envión '+pc(q)+' de la frontal); falta convertirla en técnica de cargada y jerk.',['Cargada colgado','Complejo cargada + jerk','Jerk con pausa en el dip']);
+  else F.push('Buena relación envión / sentadilla frontal')}
+ if(r.cargada&&r.jerk){if(r.jerk<r.cargada*0.95)w(2,'🚀','El jerk limita tu envión','Cargas '+fk(r.cargada)+' kg pero tu jerk es '+fk(r.jerk)+' kg. Pierdes kilos arriba.',['Jerk desde soportes','Push press','Dip con pausa','Estabilidad overhead']);
+  else if(r.cargada<r.jerk*0.95)w(1,'🪝','La cargada limita tu envión','Tu jerk ('+fk(r.jerk)+' kg) es más fuerte que tu cargada ('+fk(r.cargada)+' kg).',['Cargada desde bloques','Tirón de envión','Sentadilla frontal']);
+  else F.push('Cargada y jerk parejos')}
+ if(r.arranque&&r.strasera){const q=r.arranque/r.strasera;if(q<0.55)w(1,'⚡','Velocidad y técnica','Tu arranque es solo el '+pc(q)+' de tu sentadilla: fuerza tienes, falta velocidad bajo la barra.',['Arranque de potencia','Arranque colgado','Snatch balance']);else if(q>0.7)w(2,'🦵','Fuerza de piernas','Tu arranque es el '+pc(q)+' de tu sentadilla trasera: técnica muy buena, pero la fuerza base ya te está frenando.',['Sentadilla trasera 5×5','Sentadilla con pausa','Peso muerto rumano']);else F.push('Buena base de fuerza para el arranque')}
+ if(r.sfrontal&&r.strasera){const q=r.sfrontal/r.strasera;if(q<0.8)w(1,'🧍','Posición y core en la frontal','Tu frontal es el '+pc(q)+' de tu trasera (ideal ~85%). Suele ser torso o espalda alta.',['Frontal con pausa','Remo / espalda alta','Core anti-flexión'])}
+ if(r.tarranque&&r.arranque){const q=r.tarranque/r.arranque;if(q<1.05)w(1,'🧲','Fuerza de tirón','Tu tirón de arranque es casi igual a tu arranque. Más fuerza de tirón da más margen.',['Tirón de arranque','Peso muerto agarre arranque','Tirón con pausa']);else if(q>1.3)w(1,'🤸','Recepción del arranque','Tiras mucho más de lo que arrancas ('+pc(q)+'): el problema está en meterse bajo la barra.',['Snatch balance','Arranque desde bloques bajos','Drop snatch'])}
+ if(r.pushpress&&r.jerk&&r.jerk/r.pushpress<1.15)w(1,'⬇️','Meterse bajo la barra en el jerk','Tu jerk es casi igual a tu push press: casi no estás bajando a recibir.',['Split jerk detrás de nuca','Jerk con pausa en la recepción','Drills de pies']);
+ // sensaciones y carga
+ const wl=(a.wellness||[]).filter(x=>x.d>=addDays(t,-7));const avg=k=>wl.length?wl.reduce((n,x)=>n+(+x[k]||0),0)/wl.length:null;
+ if(wl.some(x=>(x.dolor||0)>=5))w(3,'🩹','Ojo con el dolor','Registraste dolor alto esta semana. Avísale al profe antes de cargar pesado y no entrenes con dolor.',[]);
+ if(avg('sueno')!=null&&avg('sueno')<=2.5)w(2,'😴','Dormir más','Tu sueño promedio de la semana es bajo. Dormir 8 horas es el suplemento más barato para recuperar y subir marcas.',[]);
+ if(avg('fatiga')!=null&&avg('fatiga')>=4)w(2,'🔋','Mucha fatiga','Llegas muy cansado/a a entrenar. Conversa con el profe si conviene una semana más liviana.',[]);
+ const L=(a.lastLogs||[]).slice().sort((x,y)=>String(y.d).localeCompare(String(x.d)));const rp=L.slice(0,5).filter(l=>l.rpe);
+ if(rp.length>=3&&rp.reduce((n,l)=>n+l.rpe,0)/rp.length>=9)w(2,'🌡️','Esfuerzo muy alto','Tus últimos entrenos promedian RPE 9 o más. Entrenar siempre al límite frena el progreso.',[]);
+ const days=new Set(L.filter(l=>l.d>=addDays(t,-27)).map(l=>l.d)).size;const ac=attCount(id);
+ if(days+ac<=4)w(2,'📅','Constancia','En las últimas 4 semanas registraste '+days+' entrenos'+(ac?' y '+ac+' asistencias':'')+'. Lo que más hace subir los kilos es entrenar seguido.',[]);else if(days>=10||ac>=10)F.push('Muy constante este mes 🔥');
+ if(!L.some(l=>l.d>=addDays(t,-28)&&(l.v||0)>0)&&L.length)w(1,'🎥','Sube un video','Hace un mes que no subes videos. Un video del arranque o envión le permite al profe corregirte la técnica.',[]);
+ // estancamiento
+ ['arranque','envion'].forEach(ex=>{if(!r[ex])return;const h=(a.rmHist||[]).filter(x=>x.ex===ex&&x.d).sort((x,y)=>y.d.localeCompare(x.d))[0];if(h){const wk=Math.floor((Date.parse(t)-Date.parse(h.d))/6048e5);if(wk>=10)w(1,'📈','Sin RM de '+EXN[ex].toLowerCase()+' hace '+wk+' semanas','Puede ser momento de cambiar el estímulo: otras variantes, rangos de reps o un bloque de fuerza.',[])}});
+ // competencia
+ const nc=Object.values(S.comps).filter(c=>c.date>=t).sort((x,y)=>x.date.localeCompare(y.date))[0];const ci=catInfo(a);
+ if(nc){const dd=Math.round((Date.parse(nc.date)-Date.parse(t))/864e5);if(dd<=45){w(dd<=14?3:2,'🏆','Faltan '+dd+' días para '+nc.name,dd<=14?'Semana de afinar: menos volumen, intensidad alta, dormir bien y practicar tus intentos de apertura.':'Buen momento para practicar tus intentos y llegar con técnica sólida.',['Práctica de intentos','Arranque y envión al 85–92%']);
+  if(ci&&ci.limit&&a.bw>ci.limit)w(2,'⚖️','Peso para la categoría','Estás '+fk(Math.round((a.bw-ci.limit)*10)/10)+' kg sobre '+ci.label+'. Planifícalo con el profe con tiempo, sin cortes bruscos.',[])}}
+ // próximas metas (logros de fuerza más cercanos)
+ const M=badges(id).filter(b=>!b.one&&b.g==='Fuerza'&&b.val).map(b=>{const l=badgeLevel(b);const nx=b.th[l];return nx?{b,l,nx,falta:(nx-b.val)/nx}:null}).filter(Boolean).sort((x,y)=>x.falta-y.falta).slice(0,3)
+  .map(({b,l,nx})=>`${b.i} <b>${b.t}</b>: te faltan <b>${b.f(Math.round((nx-b.val)*100)/100)}</b> para ${LV[l][0]} ${LV[l][1]}`);
+ W.sort((x,y)=>y.p-x.p);return{W,F,M}}
+function insightsHTML(id){const R=insights(id);if(!R)return'';const me=id===S.me.id;const a=S.athletes[id]||{};const open=S.insOpen===id;const P={3:['Urgente','bad'],2:['Prioridad','warn'],1:['Sugerencia','blue']};
+ let h=`<div class="card cc" style="--cc:#14b8a6"><h3>🎯 Recomendaciones${me?' para ti':' para '+esc((a.name||'').split(' ')[0])}</h3>`;
+ if(R.F.length)h+=`<div class="sec-t">💪 Puntos fuertes</div><div style="margin-bottom:8px">${R.F.map(x=>`<span class="chip" style="border-color:var(--ok)">✓ ${x}</span>`).join('')}</div>`;
+ const r=a.rms||{};const RAT=[['Arranque / Envión',r.arranque,r.envion,78,84],['Envión / Sentadilla frontal',r.envion,r.sfrontal,80,90],['Arranque / Sentadilla trasera',r.arranque,r.strasera,58,70],['Sent. frontal / Sent. trasera',r.sfrontal,r.strasera,80,90],['Jerk / Cargada',r.jerk,r.cargada,95,105],['Tirón arranque / Arranque',r.tarranque,r.arranque,105,130],['Jerk / Push press',r.jerk,r.pushpress,115,135]].filter(x=>x[1]&&x[2]);
+ if(RAT.length){h+=`<div class="sec-t">📐 Tus proporciones</div><div style="margin-bottom:8px">${RAT.map(([n,x,y,lo,hi])=>{const v=Math.round(x/y*100);const ok=v>=lo&&v<=hi;const pos=Math.max(0,Math.min(100,(v-(lo-25))/((hi+25)-(lo-25))*100));const l1=(25/((hi+25)-(lo-25)))*100,l2=100-l1;
+  return`<div style="padding:5px 0"><div class="row sp sm"><span>${n}</span><b style="color:${ok?'var(--ok)':'var(--warn)'}">${v}% ${ok?'✓':v<lo?'↓':'↑'}</b></div><div style="position:relative;height:8px;border-radius:9px;background:var(--card2);margin-top:3px"><div style="position:absolute;left:${l1}%;width:${l2-l1}%;top:0;bottom:0;background:rgba(46,204,113,.35);border-radius:9px"></div><div style="position:absolute;left:calc(${pos}% - 5px);top:-2px;width:10px;height:12px;border-radius:4px;background:${ok?'var(--ok)':'var(--warn)'}"></div></div><div class="xs mut">ideal ${lo}–${hi}%</div></div>`}).join('')}</div>`;
+  const pot=[];if(r.envion&&r.arranque&&r.envion*0.81>r.arranque+1)pot.push(`Con tu envión, tu <b>arranque</b> podría andar cerca de <b>${fk(Math.round(r.envion*0.81))} kg</b> (+${fk(Math.round(r.envion*0.81-r.arranque))}).`);
+  if(r.arranque&&r.envion&&r.arranque/0.81>r.envion+1)pot.push(`Con tu arranque, tu <b>envión</b> podría andar cerca de <b>${fk(Math.round(r.arranque/0.81))} kg</b> (+${fk(Math.round(r.arranque/0.81-r.envion))}).`);
+  if(r.sfrontal&&r.envion&&r.sfrontal*0.85>r.envion+1)pot.push(`Con tu sentadilla frontal, tu <b>envión</b> podría llegar a <b>${fk(Math.round(r.sfrontal*0.85))} kg</b> (+${fk(Math.round(r.sfrontal*0.85-r.envion))}).`);
+  if(r.cargada&&r.jerk&&r.envion&&Math.min(r.cargada,r.jerk)>r.envion+1)pot.push(`Cargas ${fk(r.cargada)} y haces jerk de ${fk(r.jerk)}: tu <b>envión</b> podría ser <b>${fk(Math.min(r.cargada,r.jerk))} kg</b>.`);
+  if(pot.length)h+=`<div class="note sm" style="margin-bottom:10px">💡 ${pot.join('<br>💡 ')}</div>`}
+ h+=`<div class="sec-t">🛠️ En qué trabajar</div>`;
+ const list=open?R.W:R.W.slice(0,4);
+ h+=list.length?list.map(x=>`<div class="li" style="align-items:flex-start"><span style="font-size:22px;line-height:1">${x.i}</span><div class="f1"><div class="row sp" style="gap:6px"><b>${esc(x.ti)}</b><span class="pill ${P[x.p][1]}">${P[x.p][0]}</span></div><div class="sm mut" style="margin-top:2px">${esc(x.d)}</div>${x.ej.length?`<div style="margin-top:4px">${x.ej.map(e=>`<span class="chip">${esc(e)}</span>`).join('')}</div>`:''}</div></div>`).join(''):'<div class="sm mut">¡Todo en orden! Sigue la plani y sube tus RM para un análisis más fino.</div>';
+ if(R.W.length>4)h+=`<button class="btn sm ghost full" style="margin-top:6px" onclick="S.insOpen=S.insOpen==='${id}'?null:'${id}';render()">${open?'Ver menos':'Ver '+(R.W.length-4)+' más'}</button>`;
+ if(R.M.length)h+=`<div class="sec-t" style="margin-top:12px">🎯 Próximas metas</div>${R.M.map(x=>`<div class="sm" style="padding:4px 0">${x}</div>`).join('')}`;
+ return h+`<div class="xs mut" style="margin-top:10px">Sugerencias automáticas según tus marcas, sensaciones y entrenos. Tu profe decide la plani.</div></div>`}
 function badgeLevel(b){if(b.one)return b.on?1:0;return b.th.filter(v=>b.val>=v).length}
 function badgesHTML(id){const B=badges(id);const a=S.athletes[id]||{};const got=B.reduce((n,b)=>n+badgeLevel(b),0);const max=B.reduce((n,b)=>n+(b.one?1:b.th.length),0);
  const open=S.bdgOpen===id;const groups=['Fuerza','Constancia','Competencia','Especiales'];
