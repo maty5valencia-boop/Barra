@@ -570,7 +570,7 @@ function vCal(){const c=role()==='coach';const [Y,M]=S.calMonth.split('-').map(N
   const people=[...new Set([...who,...att])];
   h+=`<div class="li" style="align-items:flex-start"><div class="f1 slot" style="--sc:${me?'#2ecc71':full?'#ff4d4f':'#3b82f6'}"><div><b>${esc(s.time)}</b> · ${esc(s.title||'Entrenamiento')}</div><div class="sm mut">${s.dur||60} min · ${who.length}/${s.cap||'∞'} cupos${full?' · <b style="color:var(--bad)">llena</b>':''}${wait.length?' · '+wait.length+' en espera':''}${s.notes?' · '+esc(s.notes):''}</div>
    ${c&&people.length?`<div class="sm" style="margin-top:6px">${canAtt?'<div class="xs mut" style="margin-bottom:2px">Toca para marcar asistencia:</div>':''}${people.map(u=>{const ok=att.includes(u);return canAtt?`<button class="chip" style="cursor:pointer;border:1px solid ${ok?'var(--ok)':'var(--line)'};background:${ok?'rgba(46,204,113,.18)':'transparent'};color:var(--tx)" onclick="A.att('${id}','${u}')">${ok?'✅':'⬜'} ${nameOf(u)}</button>`:`<span class="chip">${nameOf(u)}</span>`}).join('')}${canAtt?addB('+ otro'):''}</div>`:canAtt?`<div class="sm" style="margin-top:6px">${addB('+ Marcar asistencia')}</div>`:''}
-   ${c&&wait.length?`<div class="xs mut" style="margin-top:4px">⏳ En espera: ${wait.map(nameOf).join(', ')}</div>`:''}${!c&&past&&att.includes(S.me.id)?'<div class="xs" style="margin-top:4px">✅ Asististe</div>':''}</div>
+   ${c&&wait.length?`<div class="xs mut" style="margin-top:4px">⏳ En espera: ${wait.map(nameOf).join(', ')}</div>`:''}${!c&&who.length?`<div style="margin-top:4px">${who.map(u=>`<span class="chip" style="${u===S.me.id?'border-color:var(--ok);font-weight:700':''}">${u===S.me.id?'Tú':esc(shortName(u))}</span>`).join('')}</div>`:''}${!c&&past&&att.includes(S.me.id)?'<div class="xs" style="margin-top:4px">✅ Asististe</div>':''}</div>
   ${!c&&!past?(me?`<button class="btn sm sec" onclick="A.book('${id}')">Cancelar</button>`:full?`<button class="btn sm ${iw?'sec':'ghost'}" onclick="A.waitT('${id}')">${iw?'Salir de espera':'Lista de espera'}</button>`:`<button class="btn sm" onclick="A.book('${id}')">${iw?'¡Hay cupo! Reservar':'Reservar'}</button>`):''}${c?`<button class="btn sm sec" onclick="A.slotEdit('${id}')">Editar</button>`:''}</div>`});
  if(!e.c.length&&!sl.length)h+=`<div class="mut sm">${c?'Sin horarios este día. Crea uno con “+ Horario”.':'No hay horarios disponibles este día.'}</div>`;
  h+='</div>';
@@ -830,6 +830,8 @@ A.loadFixed=async()=>{if(S.saving)return;const weeks=+($('#fxw')||{}).value||8;c
  const have=new Set(Object.values(S.slots).map(s=>s.date+' '+s.time));const items=[];
  FIXED_SLOTS.forEach(([tm,days])=>{const g=uid();for(let w=0;w<weeks;w++)days.forEach(d=>{const ds=addDays(m0,w*7+d-1);if(ds<t||(ds===t&&tm<=hm)||have.has(ds+' '+tm))return;items.push({path:'slots/'+uid(),data:{date:ds,time:tm,dur:90,cap:10,title:'Entrenamiento',notes:'',group:g}})})});
  if(!items.length)return toast('Esos horarios ya estaban cargados');S.saving=true;render();const ok=await putMany(items);S.saving=false;render();if(ok)toast(items.length+' horarios creados ✅')};
+const teamName=u=>S.athletes[u]?.name||(LS['_roster/team']||{})[u]||'';
+const shortName=u=>{const n=teamName(u);if(!n)return'Atleta';const p=n.trim().split(/\s+/);return p[0]+(p[1]?' '+p[1][0]+'.':'')};
 function quickBook(){const t=ymd();const now=new Date();const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
  const up=Object.entries(S.slots).filter(([id,s])=>s.date>t||(s.date===t&&(s.time||'')>hm)).sort((a,b)=>(a[1].date+a[1].time).localeCompare(b[1].date+b[1].time));
  const days=[...new Set(up.map(([id,s])=>s.date))].slice(0,7);
@@ -841,7 +843,9 @@ function quickBook(){const t=ymd();const now=new Date();const hm=String(now.getH
  <div class="tabs" style="margin-top:8px">${days.map(d=>`<button class="${d===sel?'on':''}" onclick="S.qbDay='${d}';render()">${lbl(d)}${up.some(([id,s])=>s.date===d&&mine.has(id))?' ✓':''}</button>`).join('')}</div><div class="qb">`;
  up.filter(([id,s])=>s.date===sel).forEach(([id,s])=>{const n=cnt(id),cap=s.cap||0,me=mine.has(id),full=cap&&n>=cap&&!me;const left=cap?cap-n:null;
   h+=`<button class="${me?'me':full?'full':''}" ${full?`onclick="A.waitT('${id}')"`:`onclick="A.book('${id}')"`}><b>${esc(s.time)}</b><span>${me?'✓ Reservada':full?'Llena · espera':left!=null?left+(left===1?' cupo':' cupos'):'Reservar'}</span></button>`});
- return h+`</div><div class="xs mut" style="margin-top:6px">Toca una hora para reservar. Si ya la reservaste, tócala de nuevo para cancelar.</div></div>`}
+ h+='</div>';const wh=up.filter(([id,s])=>s.date===sel).map(([id,s])=>[s,Object.entries(S.bookings).filter(([u,b])=>(b.slots||[]).includes(id)).map(([u])=>u)]).filter(x=>x[1].length);
+ if(wh.length)h+=`<div class="sec-t" style="margin-top:10px">👥 Quiénes van</div>${wh.map(([s,us])=>`<div class="row" style="gap:8px;align-items:flex-start;padding:3px 0"><b style="width:44px;flex:none">${esc(s.time)}</b><div class="f1">${us.map(u=>`<span class="chip" style="${u===S.me.id?'border-color:var(--ok);font-weight:700':''}">${u===S.me.id?'Tú':esc(shortName(u))}</span>`).join('')}</div></div>`).join('')}`;
+ return h+`<div class="xs mut" style="margin-top:6px">Toca una hora para reservar. Si ya la reservaste, tócala de nuevo para cancelar.</div></div>`}
 function coachDay(){const t=ymd();const now=new Date();const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
  const up=Object.entries(S.slots).filter(([id,s])=>s.date>=t).sort((a,b)=>(a[1].date+a[1].time).localeCompare(b[1].date+b[1].time));
  const days=[...new Set(up.map(([id,s])=>s.date))].slice(0,7);
