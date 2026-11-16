@@ -284,7 +284,7 @@ function detectEx(t){t=norm(t);if(!t.trim())return null;
  if(/final de arr/.test(t))return'finarr';
  if(/(tiron|jalon).*(arr|snatch)|snatch ?pull/.test(t))return'tarranque';
  if(/tiron|jalon|clean ?pull|\bpull\b/.test(t))return'tenvion';
- if(/\bohs\b|overhead|sentadilla.*(arriba|overhead)/.test(t))return'ohs';
+ if(/\bohs|overhead|sentadilla.*(arriba|overhead)/.test(t))return'ohs';
  if(/(arr|arraque|arranque|snatch).*soporte/.test(t))return'arrsoporte';
  if(/(clin|clean|cargada).*soporte/.test(t))return'clinsoporte';
  if(/(arr|arranque|snatch).*(fuerza|power)|power ?snatch/.test(t))return'arrfuerza';
@@ -573,11 +573,12 @@ function vPlanEdit(){const d=S.draft;if(!d)return'';const al=athleteList();const
  <label>Para</label><div class="seg"><button class="${all?'on':''}" onclick="S.draft.assign='all';render()">Todo el equipo</button><button class="${!all?'on':''}" onclick="S.draft.assign=S.draft.assign==='all'?[]:S.draft.assign;render()">⭐ Personalizada</button></div>${!all?`<div class="xs mut" style="margin-top:6px">Los atletas elegidos ven esta plani <b>en vez de la plani general</b> de esa misma semana.</div>`:''}
  ${!all?`<div style="margin-top:8px">${al.length?al.map(([u,x])=>`<label class="row" style="text-transform:none;font-size:14px;color:var(--tx);font-weight:500;margin:6px 0"><input type="checkbox" ${d.assign.includes(u)?'checked':''} onchange="A.toggleAssign('${u}',this.checked)"> ${esc(x.name)}</label>`).join(''):'<div class="mut sm">No hay atletas todavía.</div>'}</div>`:''}
  <label>Indicaciones generales</label><textarea rows="3" placeholder="Opcional" oninput="S.draft.notes=this.value">${esc(d.notes)}</textarea></div>
- <div class="card cc" style="--cc:#3b82f6"><h3>Subir plani</h3><div class="sm mut" style="margin-bottom:10px">Sube el Excel o una foto de la plani: aparece al tiro a los atletas. En el Excel, los porcentajes se convierten en kilos para cada atleta.</div>
- <div class="row wrap"><span class="btn sec file">📊 Excel / CSV<input type="file" accept=".xlsx,.xls,.csv,.ods" onchange="A.xlsIn(this)"></span><span class="btn sec file">📷 Foto(s)<input type="file" accept="image/*" multiple onchange="A.imgIn(this)"></span></div>
+ <div class="card cc" style="--cc:#3b82f6"><h3>Subir plani</h3><div class="sm mut" style="margin-bottom:10px">Sube el Excel, pega las celdas o sube una foto clara de la planilla: la app arma los días para que los atletas marquen cada ejercicio. En el Excel, los porcentajes se convierten en kilos para cada atleta.</div>
+ <div class="row wrap"><button class="btn sec" onclick="openModal({t:'pastePlan',v:{txt:''}})">📋 Pegar desde Excel</button><span class="btn sec file">📊 Excel / CSV<input type="file" accept=".xlsx,.xls,.csv,.ods" onchange="A.xlsIn(this)"></span><span class="btn sec file">📷 Foto(s)<input type="file" accept="image/*" multiple onchange="A.imgIn(this)"></span></div>
  ${S.uploading?'<div class="sm" style="margin-top:8px;color:var(--acc2)">Subiendo…</div>':''}
  ${d._blocks&&d._blocks.length?`<div class="banner" style="margin-top:10px">📅 Leí la plani del Excel: <b>${d.sessions.length} días</b> con sus ejercicios (revísalos abajo en «Sesiones»). ${d._blocks.length>1?`<div style="margin-top:6px">Semana: <select onchange="A.pickBlock(+this.value)" style="width:auto;display:inline-block;padding:4px 6px">${d._blocks.map((b,i)=>`<option value="${i}" ${d.blockIdx===i?'selected':''}>${esc(b.title||('Bloque '+(i+1)))}</option>`).join('')}</select></div>`:''}</div>`:''}
  ${(d.sheets||[]).length?`<div class="row sp" style="margin-top:10px"><span class="sm">📊 ${d.sheets.length} hoja(s): ${d.sheets.map(s=>esc(s.name)).join(', ')}</span><button class="btn sm ghost" onclick="S.draft.sheets=[];render()">Quitar</button></div>`:''}
+ ${S.ocr?`<div class="banner" style="margin-top:10px">🔎 <span id="ocrst">${esc(S.ocr)}</span><div class="xs mut">La primera vez demora un poco más (descarga el lector).</div></div>`:S.ocrFile&&(d.images||[]).length?`<button class="btn sm sec" style="margin-top:10px" onclick="A.ocrPlan()">🔎 Leer la foto y armar los días</button>`:''}
  ${(d.images||[]).length?`<div class="thumbs" style="margin-top:10px">${d.images.map((im,i)=>`<div><img src="${esc(srcOf(im))}"><button onclick="S.draft.images.splice(${i},1);render()">✕</button></div>`).join('')}</div>`:''}</div>
  <div class="card cc" style="--cc:#ff5a1f"><div class="row sp"><h3 style="margin:0">Sesiones en la app</h3><span class="xs mut">opcional</span></div><div class="sm mut" style="margin:6px 0 10px">Esquema: <b>%/reps x series</b>. Ej: <b>70/3, 75/2, 80/2x3</b> o <b>3x2 @80</b>.</div>
  ${(d.sessions||[]).map((s,si)=>{const st=[];(s.items||[]).forEach(it=>st.push(...parseScheme(it.scheme)));tot.push(...st);const ss=schemeStats(st);
@@ -730,6 +731,7 @@ function modalBody(){const m=S.modal,v=m.v;
   if(!P.length)h+=`<div class="sm mut" style="margin-bottom:8px">No tienes plani esta semana.</div>`;
   return h+`<button class="btn sec full" style="margin-top:6px" onclick="A.closeModal();A.logNew()">➕ Entrenamiento libre</button><button class="btn ghost full" style="margin-top:6px" onclick="A.closeModal()">Cancelar</button>`}
  if(m.t==='logRes')return logResHTML(v);
+ if(m.t==='pastePlan')return`<h2>📋 Pegar desde Excel</h2><ol class="sm" style="padding-left:18px;line-height:1.6;margin:0 0 8px"><li>En el Excel, selecciona la semana: desde la fila con la fecha («16 al 20 de noviembre») hasta «ESTIRAMIENTO» y la nota de abajo.</li><li>Copia (Ctrl+C).</li><li>Pégalo aquí (Ctrl+V) y toca <b>Leer plani</b>.</li></ol><textarea rows="8" placeholder="Pega aquí las celdas copiadas…" oninput="S.modal.v.txt=this.value">${esc(v.txt||'')}</textarea><div class="row" style="margin-top:12px"><button class="btn f1" onclick="A.pastePlan()">Leer plani</button><button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`;
  if(m.t==='install')return`<h2>Instalar la app 📲</h2>${isIOS()?`<ol class="sm" style="padding-left:18px;line-height:1.7"><li>Abre este link en <b>Safari</b>.</li><li>Toca el botón <b>Compartir</b> (el cuadrado con la flecha ↑).</li><li>Elige <b>«Agregar a inicio»</b> y toca <b>Agregar</b>.</li></ol>`:`<ol class="sm" style="padding-left:18px;line-height:1.7"><li>Abre este link en <b>Chrome</b>.</li><li>Toca el menú <b>⋮</b> (arriba a la derecha).</li><li>Elige <b>«Instalar app»</b> o <b>«Agregar a la pantalla principal»</b>.</li></ol>`}<div class="sm mut">Queda con el logo de Halteros y se abre a pantalla completa.</div><button class="btn full" style="margin-top:14px" onclick="A.closeModal()">Listo</button>`;
  if(m.t==='theme')return`<h2>Diseño</h2><div class="sm mut" style="margin-bottom:12px">Se guarda en este dispositivo.</div><div class="thm">${THEMES.map(([k,n,bg,c1,c2,c3])=>`<button class="${(S.theme||'blanco')===k?'on':''}" onclick="A.setTheme('${k}')"><div class="pv" style="background:${bg}"><i style="background:linear-gradient(90deg,${c1},${c2});width:70%"></i><i style="background:${c3};width:90%;opacity:.5"></i><i style="background:${c3};width:55%;opacity:.5"></i></div><b>${n}</b></button>`).join('')}</div><button class="btn sec full" style="margin-top:14px" onclick="A.closeModal()">Listo</button>`;
  if(m.t==='coach')return`<h2>Crear profe</h2><div class="sm mut">Tendrá su propio equipo, planis y horarios. Entra con su nombre y esta contraseña.</div><label>Nombre y apellido</label><input oninput="S.modal.v.name=this.value"><label>Contraseña (mín. 4)</label><input type="text" oninput="S.modal.v.pass=this.value"><div class="row" style="margin-top:16px"><button class="btn f1" onclick="A.saveCoach()">Crear</button><button class="btn ghost" onclick="A.closeModal()">Cancelar</button></div>`;
@@ -894,12 +896,22 @@ async function parseExcel(file){if(!window.XLSX)throw new Error('xlsx');let wb;i
   const mc=Math.max(0,...rows.map(r=>{let i=r.c.length;while(i&&!r.c[i-1].trim())i--;return i}));rows.forEach(r=>{r.c=r.c.slice(0,mc);while(r.c.length<mc)r.c.push('')});
   return{name:n,rows}}).filter(s=>s.rows.length)}
 function trimRows(rows){rows=rows.map(r=>({c:(r.c||[]).slice()}));while(rows.length&&rows[rows.length-1].c.every(v=>!String(v).trim()))rows.pop();const mc=Math.max(0,...rows.map(r=>{let i=r.c.length;while(i&&!String(r.c[i-1]).trim())i--;return i}));rows.forEach(r=>{r.c=r.c.slice(0,mc);while(r.c.length<mc)r.c.push('')});return rows}
-A.pickBlock=i=>{const d=S.draft;const b=d._blocks&&d._blocks[i];if(!b)return;d.blockIdx=i;d.sessions=blockSessions(b);if(b.week)d.week=b.week;if(!d.title||d._autoTitle){d.title='Plani '+(b.title||b.sheet);d._autoTitle=true}if(!d.notes||d._autoNote){d.notes=b.note||'';d._autoNote=true}d.sheets=[{name:b.title||b.sheet,rows:trimRows(b.rows)}];render()};
+/* pegar celdas copiadas desde Excel (texto separado por tabulaciones, con celdas de varias líneas entre comillas) */
+function parseTSV(t){const rows=[];let row=[],cell='',q=false;t=String(t||'').replace(/\r\n?/g,'\n');
+ for(let i=0;i<t.length;i++){const ch=t[i];if(q){if(ch==='"'){if(t[i+1]==='"'){cell+='"';i++}else q=false}else cell+=ch}
+  else if(ch==='"'&&cell==='')q=true;else if(ch==='\t'){row.push(cell);cell=''}else if(ch==='\n'){row.push(cell);rows.push(row);row=[];cell=''}else cell+=ch}
+ if(cell||row.length){row.push(cell);rows.push(row)}return rows}
+A.pastePlan=()=>{const raw=parseTSV(S.modal.v.txt);let B=blocksFromRaw(raw,'Pegado');
+ if(!B.length){const cols=Math.max(0,...raw.map(r=>r.length));const days=[];for(let c=0;c<cols;c++){const txt=raw.map(r=>r[c]||'').filter(Boolean).join('\n');const it=pxDay(txt);if(it.length)days.push({n:days.length+1,items:it})}
+  if(days.length)B=[{sheet:'Pegado',title:'',week:null,note:'',days,rows:raw.map(r=>({c:r.map(v=>String(v).slice(0,1500))}))}]}
+ if(!B.length)return toast('No encontré ejercicios. Copia desde la fila «DIA 1…» hasta «ESTIRAMIENTO».');
+ S.draft._blocks=B;let i=B.findIndex(b=>b.week===S.draft.week);if(i<0)i=B.length-1;closeModal();A.pickBlock(i);const b=B[i];toast('📅 '+b.days.length+' días y '+b.days.reduce((n,d)=>n+d.items.length,0)+' ejercicios')};
+A.pickBlock=i=>{const d=S.draft;const b=d._blocks&&d._blocks[i];if(!b)return;d.blockIdx=i;d.sessions=blockSessions(b);if(b.week)d.week=b.week;if(!d.title||d._autoTitle){d.title='Plani '+(b.title||b.sheet);d._autoTitle=true}if(!d.notes||d._autoNote){d.notes=b.note||'';d._autoNote=true}if(b.sheet!=='Foto')d.sheets=[{name:b.title||b.sheet,rows:trimRows(b.rows)}];render()};
 A.xlsIn=async inp=>{const f=inp.files[0];inp.value='';if(!f)return;try{
  if(window.XLSX){const wb=/\.csv$/i.test(f.name)?XLSX.read(await f.text(),{type:'string'}):XLSX.read(await f.arrayBuffer(),{type:'array'});const B=planBlocks(wb);
   if(B.length){S.draft._blocks=B;let i=B.findIndex(b=>b.week===S.draft.week);if(i<0)i=B.length-1;A.pickBlock(i);const b=B[i];return toast('📅 '+(b.title||'Semana')+': '+b.days.length+' días y '+b.days.reduce((n,d)=>n+d.items.length,0)+' ejercicios')}}
  const sh=await parseExcel(f);if(!sh.length)return toast('El archivo está vacío');S.draft.sheets=sh;if(!S.draft.title)S.draft.title=f.name.replace(/\.\w+$/,'');render();toast(sh.length+' hoja(s) cargada(s)')}catch(e){toast(e.message==='xlsx'?'El lector de Excel no cargó. Revisa tu conexión y recarga.':'No se pudo leer el archivo.')}};
-A.imgIn=async inp=>{const fs=[...inp.files];inp.value='';if(!fs.length)return;S.uploading=true;render();for(const f0 of fs){try{const f=await shrinkImage(f0);if(f.size>20*1024*1024){toast('Imagen muy grande');continue}const r=await upload(f);S.draft&&S.draft.images.push(r)}catch(e){errToast(e);break}}S.uploading=false;render()};
+A.imgIn=async inp=>{const fs=[...inp.files];inp.value='';if(!fs.length)return;S.ocrFile=fs[0];S.uploading=true;render();for(const f0 of fs){try{const f=await shrinkImage(f0);if(f.size>20*1024*1024){toast('Imagen muy grande');continue}const r=await upload(f);S.draft&&S.draft.images.push(r)}catch(e){errToast(e);break}}S.uploading=false;render();if(S.draft&&!(S.draft.sessions||[]).length&&!(S.draft.sheets||[]).length)A.ocrPlan()};
 A.savePlan=async()=>{const d=S.draft;if(!d.title.trim())return toast('Ponle un título');if(Array.isArray(d.assign)&&!d.assign.length)return toast('Elige al menos un atleta');
  if(!(d.sheets.length||d.images.length||d.sessions.length||d.notes.trim()))return toast('Sube un Excel, una foto o arma al menos una sesión');
  const data={title:d.title.trim(),week:d.week||mondayOf(ymd()),assign:d.assign,notes:d.notes||'',sheets:d.sheets,images:d.images,sessions:d.sessions.map(s=>({name:s.name,items:(s.items||[]).filter(it=>it.name||it.scheme)})),createdAt:d.createdAt||Date.now(),updatedAt:Date.now(),by:S.me.id};
@@ -1241,6 +1253,49 @@ function blocksFromRaw(raw,sn){const out=[];const DH=v=>/^\s*d[ií]a\s*\d{1,2}\s
 const DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
 function blockSessions(b){return b.days.map(d=>{let nm='Día '+d.n;if(b.week){const dt=addDays(b.week,d.n-1);nm=DIAS[new Date(dt+'T12:00').getDay()]+' '+(+dt.slice(8))+' · Día '+d.n}return{name:nm,items:d.items.map(it=>({name:it.name,scheme:it.scheme,base:it.base||''}))}})}
 
+/* ===================== leer plani desde foto (OCR) ===================== */
+// Convierte el resultado del OCR (palabras con posición) en la grilla DÍA 1…DÍA N, igual que un Excel.
+function ocrFix(t){if(/[0-9]/.test(t)&&/^[0-9oOlIiSs%\/xX+.,]+$/.test(t))t=t.replace(/[oO]/g,'0').replace(/[lIi]/g,'1').replace(/[sS]/g,'5');return ocrSplit(t)}
+// "50/360/370/2/2" → "50/3 60/3 70/2/2" (el OCR a veces pega los esquemas)
+function ocrSplit(t){let m0=/^(\d{1,2}[xX]\d{1,3})[xX]$/.exec(t);if(m0)return m0[1]+' x';
+ if(!/^\d[\d\/]{6,}$/.test(t)||(t.match(/\//g)||[]).length<2)return t;const out=[];let i=0;
+ while(i<t.length){const m=/^(1\d\d|\d\d)\/(\d)(?:\/(\d))?/.exec(t.slice(i));if(!m)return t;out.push(m[0]);i+=m[0].length;if(t[i]==='/')return t}
+ return out.join(' ')}
+function ocrToBlock(data){const W=[];(data.lines||[]).forEach((ln,li)=>(ln.words||[]).forEach(w=>{let t=String(w.text||'').trim().replace(/^[|—\-_]+|[|—_]+$/g,'');if(!t)return;const b=w.bbox;W.push({t:ocrFix(t),x0:b.x0,x1:b.x1,y0:b.y0,y1:b.y1,cx:(b.x0+b.x1)/2,cy:(b.y0+b.y1)/2,li})}));
+ if(!W.length)return null;const lineY=li=>{const v=W.filter(w=>w.li===li);return[Math.min(...v.map(w=>w.y0)),Math.max(...v.map(w=>w.y1))]};
+ // 1) encabezados "DIA n" (centrados)
+ const H=[];W.forEach(w=>{const n=norm(w.t).replace(/[^a-z0-9]/g,'');let m=/^d[i1l]a(\d)$/.exec(n);if(m)return H.push({n:+m[1],cx:w.cx,y:w.y1,li:w.li});
+  if(/^d[i1l]a$/.test(n)){const nx=W.find(v=>v.li===w.li&&v.x0>w.x1&&v.x0-w.x1<(w.x1-w.x0)*1.5&&/^\d$/.test(v.t));if(nx)H.push({n:+nx.t,cx:(w.x0+nx.x1)/2,y:Math.max(w.y1,nx.y1),li:w.li})}});
+ const byN={};H.forEach(h=>{if(!byN[h.n]||h.y<byN[h.n].y)byN[h.n]=h});let hs=Object.values(byN).sort((a,b)=>a.cx-b.cx);
+ // 2) si no se leen, usar filas repetidas por columna: N° sesión, calentamiento, estiramiento (alineadas a la izquierda)
+ const KEYS=[/ses[i1l]/,/(calent|carent|camen|caent|cament|movil|moviu)/,/(stiram|smgam|smmam|smnam|ramient|estir)/];let anchors=null,topY=hs.length?Math.max(...hs.map(h=>h.y)):-1;
+ KEYS.forEach((re,ki)=>{const g={};W.forEach(w=>{if(re.test(norm(w.t)))(g[w.li]=g[w.li]||[]).push(w)});Object.entries(g).forEach(([li,v])=>{v.sort((a,b)=>a.x0-b.x0);const xs=[];v.forEach(w=>{if(!xs.length||w.x0-xs[xs.length-1]>40)xs.push(w.x0)});
+   if(xs.length>=3&&(!anchors||xs.length>anchors.xs.length||(xs.length===anchors.xs.length&&ki<anchors.k)))anchors={xs,k:ki,li:+li}})});
+ KEYS.slice(0,2).forEach(re=>{W.forEach(w=>{if(re.test(norm(w.t)))topY=Math.max(topY,w.y1)})});
+ let cols;
+ if(hs.length>=3&&(!anchors||hs.length>=anchors.xs.length)){const gap=(hs[hs.length-1].cx-hs[0].cx)/(hs.length-1);cols=hs.map((h,i)=>({n:h.n,a:i?(hs[i-1].cx+h.cx)/2:h.cx-gap/2,b:i<hs.length-1?(h.cx+hs[i+1].cx)/2:h.cx+gap/2,by:'cx'}))}
+ else if(anchors){const xs=anchors.xs;const gap=(xs[xs.length-1]-xs[0])/(xs.length-1);const tol=gap*.12;cols=xs.map((x,i)=>({n:i+1,a:x-tol,b:i<xs.length-1?xs[i+1]-tol:x+gap,by:'x0'}))}
+ else return null;
+ if(topY<0&&anchors)topY=lineY(anchors.li)[1];
+ const est=W.filter(w=>w.cy>topY&&/(stiram|smgam|smmam|smnam|ramient)/.test(norm(w.t))).sort((a,b)=>a.cy-b.cy)[0];const bot=est?est.y0-2:Infinity;
+ const C=cols.map(()=>({}));W.forEach(w=>{if(w.cy<=topY+2||w.cy>=bot)return;if(/^\d{4}$/.test(w.t))return;const v=cols[0].by==='cx'?w.cx:w.x0;const k=cols.findIndex(c=>v>=c.a&&v<c.b);if(k<0)return;(C[k][w.li]=C[k][w.li]||[]).push(w)});
+ const days=cols.map((c,k)=>{const lines=Object.keys(C[k]).map(Number).sort((a,b)=>a-b).map(li=>C[k][li].sort((a,b)=>a.x0-b.x0).map(w=>w.t).join(' '));return{n:c.n,items:pxDay(lines.join('\n')),text:lines.join('\n')}}).filter(d=>d.items.length);
+ const lineTxt=li=>W.filter(w=>w.li===li).sort((a,b)=>a.x0-b.x0).map(w=>w.t).join(' ');
+ const above=[...new Set(W.filter(w=>w.cy<topY-5).map(w=>w.li))].map(lineTxt);
+ const title=(above.find(t=>/\d{1,2}\s*(al|a|-)\s*\d{1,2}\s*(de\s*)?[a-z]/i.test(t))||'').replace(/^\s*\d{3,5}\s+/,'').replace(/\s*\d+\s*d[ií]as.*$/i,'').trim();
+ const note=est?[...new Set(W.filter(w=>w.cy>est.y1+3).map(w=>w.li))].map(lineTxt).map(t=>t.replace(/^\s*\d{3,5}\s+/,'').trim()).find(t=>t.length>12&&!/stiram|smgam|ramient/i.test(t))||'':'';
+ if(!days.length)return null;
+ const rows=[{c:[title]},{c:cols.map(c=>'DIA '+c.n)},{c:cols.map(c=>(days.find(d=>d.n===c.n)||{}).text||'')},{c:cols.map(()=>'ESTIRAMIENTO')},{c:[note]}];
+ return{sheet:'Foto',title,week:pxWeek(title),note,days,rows}}
+
+function loadTess(){if(window.Tesseract)return Promise.resolve();return new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=()=>res();sc.onerror=()=>rej(new Error('No se pudo cargar el lector de fotos. Revisa tu conexión.'));document.head.appendChild(sc)})}
+async function prepImg(file){const url=URL.createObjectURL(file);try{const img=new Image();img.src=url;await img.decode();const k=Math.min(3,Math.max(1,2000/img.naturalWidth));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);const x=c.getContext('2d');x.filter='grayscale(1) contrast(1.35)';x.drawImage(img,0,0,c.width,c.height);return c}finally{URL.revokeObjectURL(url)}}
+A.ocrPlan=async()=>{const d=S.draft;const f=S.ocrFile;if(!d||!f)return toast('Vuelve a subir la foto para leerla');if(S.ocr)return;S.ocr='Cargando el lector…';render();
+ try{await loadTess();const c=await prepImg(f);const w=await Tesseract.createWorker('spa',1,{logger:m=>{if(m.status==='recognizing text'){S.ocr='Leyendo la foto… '+Math.round(m.progress*100)+'%';const e=$('#ocrst');if(e)e.textContent=S.ocr}}});
+  const {data}=await w.recognize(c,{},{blocks:true});await w.terminate();const lines=[];(data.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>lines.push(l))));
+  const B=ocrToBlock({lines});S.ocr=null;if(!B){render();return toast('No pude encontrar la grilla de días en la foto. Prueba con una foto más nítida o sube el Excel.')}
+  d._blocks=[B];A.pickBlock(0);toast('📷 Leí '+B.days.length+' días y '+B.days.reduce((n,x)=>n+x.items.length,0)+' ejercicios. Revísalos antes de publicar.')}
+ catch(e){S.ocr=null;render();toast(e.message||'No se pudo leer la foto')}};
 /* ===================== logros ===================== */
 /* Logros por niveles: 🥉 bronce · 🥈 plata · 🥇 oro · 💎 diamante. Las metas de fuerza son distintas para hombres y mujeres. */
 const LV=[['🥉','Bronce','#cd7f32'],['🥈','Plata','#9aa3b2'],['🥇','Oro','#e6b800'],['💎','Diamante','#38bdf8'],['🔥','Élite','#ef4444'],['👑','Leyenda','#a855f7']];
